@@ -129,3 +129,4 @@ main = do
     let lines_content = lines content
     let lines_content_w = map words lines_content
     let ninjas_list = map convertStringListToNinja lines_content_w
+    return ninjas_list
