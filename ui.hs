@@ -56,6 +56,9 @@ getNinjasByCountry :: Char -> [Ninja]
 getNinjasByCountry 'f' = fire
 getNinjasByCountry 'e' = earth
 
+getNinjas :: [Ninja]
+getNinjas = fire ++ earth
+
 listNinjas :: [Ninja] -> [String]
 listNinjas = map (show)
 
@@ -73,9 +76,14 @@ viewNinjasByCountry = do
         else
             putStrLn invalidCountryInput
 
+viewNinjas :: IO()
+viewNinjas = do
+    let ninjas = getNinjas
+    displayNinjas ninjas
+
 selectAction :: String -> IO()
 selectAction "a" = viewNinjasByCountry
-selectAction "b" = putStrLn "List All Ninjas"
+selectAction "b" = viewNinjas
 selectAction "c" = putStrLn "Round Ninjas"
 selectAction "d" = putStrLn "Round Countries"
 selectAction "e" = putStrLn "Exit"
