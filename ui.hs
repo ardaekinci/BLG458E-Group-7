@@ -96,7 +96,7 @@ viewNinjas = do
     displayNinjas ninjas
 
 roundBetweenNinjas :: Ninja -> Ninja -> String
-roundBetweenNinjas ninja1 ninja2= showWinner ninja1
+roundBetweenNinjas ninja1 ninja2 = showWinner ninja1
 
 showWinner :: Ninja -> String
 showWinner n = "Winner: \"" ++ (name n) ++ ", Round: " ++ (show (r n)) ++ ", Status: " ++ (status n) ++ "\""
@@ -110,24 +110,30 @@ displayRoundBetweenNinjas nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja
     | not (isCountryValid countryOfSecondNinja) = "Country of second ninja does not exist."
     | length firstNinja == 0                    = "First ninja that you entered not found for given country"
     | length secondNinja == 0                   = "Second ninja that you entered not found for given country"
-    | otherwise                                 = roundBetweenNinjas (firstNinja!!0) (secondNinja!!0)
-    where firstNinja = findNinjaByNameAndCountry nameOfFirstNinja (countryOfFirstNinja!!0)
-          secondNinja = findNinjaByNameAndCountry nameOfSecondNinja (countryOfSecondNinja!!0)
+    | otherwise                                 = roundBetweenNinjas (head firstNinja) (head secondNinja)
+    where firstNinja = findNinjaByNameAndCountry nameOfFirstNinja (toChar countryOfFirstNinja)
+          secondNinja = findNinjaByNameAndCountry nameOfSecondNinja (toChar countryOfSecondNinja)
 
 viewRoundNinjas :: IO()
 viewRoundNinjas = do
-    nameOfFirstNinja <- inputWithText "Enter the name of the first ninja"
-    countryOfFirstNinja <- inputWithText "Enter the country code of the first ninja"
-    nameOfSecondNinja <- inputWithText "Enter the name of the second ninja"
-    countryOfSecondNinja <- inputWithText "Enter the country code of the second ninja"
-    
+    nameOfFirstNinja <- inputWithText "Enter the name of the first ninja: "
+    countryOfFirstNinja <- inputWithText "Enter the country code of the first ninja: "
+    nameOfSecondNinja <- inputWithText "Enter the name of the second ninja: "
+    countryOfSecondNinja <- inputWithText "Enter the country code of the second ninja: "
+    putStrLn ((displayRoundBetweenNinjas nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja) ++ "\n")
 
+viewRoundCountries :: IO()
+viewRoundCountries = do
+    firstCountryCode <- inputWithText "Enter the first country code: "
+    secondCountryCode <- inputWithText "Enter the second country code: "
+    putStrLn ((showWinner ninja1) ++ "\n")
+    
 selectAction :: String -> IO()
 selectAction "a" = viewNinjasByCountry
 selectAction "b" = viewNinjas
-selectAction "c" = putStrLn "Round Ninjas"
-selectAction "d" = putStrLn "Round Countries"
-selectAction "e" = putStrLn "Exit"
+selectAction "c" = viewRoundNinjas
+selectAction "d" = viewRoundCountries
+selectAction "e" = viewNinjas
 selectAction _ = putStrLn "Invalid Action entered"
 
 main = do  
