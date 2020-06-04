@@ -9,6 +9,10 @@ inputWithText text = do
     hFlush stdout
     getLine
 
+toChar :: String -> Char
+toChar [chr] = chr
+toChar _     = error "Wrong Input Supplied. Input Length must be exactly 1"
+
 data Ninja = Ninja {
     name:: String, 
     country:: Char, 
@@ -45,7 +49,7 @@ isCountryValid _ = False -- Return False for other inputs
 
 ninja1 = Ninja {name="Naruto", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, score=133.5}
 ninja2 = Ninja {name="Haruki", country='e', status="Journeyman", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, score=75.7}
-ninja3 = Ninja {name="Naruto", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, score=150.2}
+ninja3 = Ninja {name="Hiroshi", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, score=150.2}
 
 fire = [ninja1, ninja3]
 earth = [ninja2]
@@ -58,6 +62,10 @@ uiController = do
         selectAction action
         when (action /= "e") uiLoop -- Do not break the loop until the user want to exit
     uiLoop -- Start first loop
+
+getAvailableNinjasByCountry :: Char -> [Ninja]
+getAvailableNinjasByCountry 'f' = fire
+getAvailableNinjasByCountry 'e' = earth
 
 getNinjasByCountry :: Char -> [Ninja]
 getNinjasByCountry 'f' = fire
@@ -86,6 +94,33 @@ viewNinjas :: IO()
 viewNinjas = do
     let ninjas = getNinjas
     displayNinjas ninjas
+
+roundBetweenNinjas :: Ninja -> Ninja -> String
+roundBetweenNinjas ninja1 ninja2= showWinner ninja1
+
+showWinner :: Ninja -> String
+showWinner n = "Winner: \"" ++ (name n) ++ ", Round: " ++ (show (r n)) ++ ", Status: " ++ (status n) ++ "\""
+
+findNinjaByNameAndCountry :: String -> Char -> [Ninja]
+findNinjaByNameAndCountry nameOfNinja country = filter (\x -> name x == nameOfNinja) (getAvailableNinjasByCountry country) 
+
+displayRoundBetweenNinjas :: String -> String -> String -> String -> String
+displayRoundBetweenNinjas nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja
+    | not (isCountryValid countryOfFirstNinja)  = "Country of first ninja does not exist."
+    | not (isCountryValid countryOfSecondNinja) = "Country of second ninja does not exist."
+    | length firstNinja == 0                    = "First ninja that you entered not found for given country"
+    | length secondNinja == 0                   = "Second ninja that you entered not found for given country"
+    | otherwise                                 = roundBetweenNinjas (firstNinja!!0) (secondNinja!!0)
+    where firstNinja = findNinjaByNameAndCountry nameOfFirstNinja (countryOfFirstNinja!!0)
+          secondNinja = findNinjaByNameAndCountry nameOfSecondNinja (countryOfSecondNinja!!0)
+
+viewRoundNinjas :: IO()
+viewRoundNinjas = do
+    nameOfFirstNinja <- inputWithText "Enter the name of the first ninja"
+    countryOfFirstNinja <- inputWithText "Enter the country code of the first ninja"
+    nameOfSecondNinja <- inputWithText "Enter the name of the second ninja"
+    countryOfSecondNinja <- inputWithText "Enter the country code of the second ninja"
+    
 
 selectAction :: String -> IO()
 selectAction "a" = viewNinjasByCountry
