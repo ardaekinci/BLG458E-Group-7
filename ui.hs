@@ -1,5 +1,13 @@
 import Control.Monad -- Used for Conditional execution `when for ui controller`
 import Data.Char -- Used for toLower
+import System.IO -- Flush buffer befor taking input from user
+
+-- | The helper method to get input from user with text
+inputWithText :: String -> IO String
+inputWithText text = do
+    putStr text
+    hFlush stdout
+    getLine
 
 data Ninja = Ninja {
     name:: String, 
@@ -21,9 +29,8 @@ uiOptions = "a) View a Country's Ninja Information \n\
             \b) View All Countries' Ninja Information \n\
             \c) Make a Round Between Ninjas \n\
             \d) Make a Round Between Countries \n\
-            \e) Exit\n\
-            \Enter the action: "
-countryMsg = "Enter the country code: "
+            \e) Exit \n"
+countryInputText = "Enter the country code: "
 invalidCountryInput = "Invalid Country entered"
 availableActions = ['a'..'e']
 availableCountries = "eElLwWnNfF"
@@ -47,7 +54,7 @@ uiController :: IO()
 uiController = do
     let uiLoop = do
         putStr uiOptions
-        action <- getLine
+        action <- inputWithText "Enter the action: "
         selectAction action
         when (action /= "e") uiLoop -- Do not break the loop until the user want to exit
     uiLoop -- Start first loop
@@ -67,8 +74,7 @@ displayNinjas = putStrLn . unlines . listNinjas
 
 viewNinjasByCountry :: IO() 
 viewNinjasByCountry = do
-    putStr countryMsg
-    country <- getLine
+    country <- inputWithText countryInputText
     if isCountryValid country
         then do
             let ninjas = getNinjasByCountry (toLower (country!!0))
