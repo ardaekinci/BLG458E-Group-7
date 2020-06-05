@@ -37,31 +37,14 @@ instance Ord Ninja where
 instance Show Ninja where
    show (Ninja name _ status score _ _ _ _ _ r) = name ++ ", Score: " ++ (show score) ++ ", Status: " ++ status ++ ", Round: " ++ (show r)
 
-ninja1 = Ninja {name="Naruto", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, abilityScore=140, score=133.5}
-ninja2 = Ninja {name="Haruki", country='e', status="Journeyman", exam1=40, exam2=75, ability1="Lightning", ability2="Summon", r=0, abilityScore=140, score=133.5}
-ninja3 = Ninja {name="Hiroshi", country='f', status="Junior", exam1=40, exam2=75, ability1="Water", ability2="Summon", r=0, abilityScore=90, score=150.2}
-ninja4 = Ninja {name="Sasuke", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=150.2}
-ninja5 = Ninja {name="five", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
-ninja6 = Ninja {name="six", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
-ninja7 = Ninja {name="seven", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=2, abilityScore=150, score=130.2}
 
-fire_ninjas = [ninja1, ninja3]
-earth_ninjas = [ninja2]
-lightning_ninjas = [ninja4, ninja5, ninja6, ninja7]
+data Country = Country{countryName :: String, ninjas :: [Ninja], code :: Char, promoted :: Bool}
 
-data Country = Country{countryName :: String, ninjas :: [Ninja], code :: Char, promoted :: Bool} deriving Show
-fire :: Country
-fire = Country{countryName="fire", ninjas=fire_ninjas, code='f', promoted= False}
-lightning :: Country
-lightning = Country{countryName="lightning", ninjas=lightning_ninjas, code='l', promoted= False}
-earth :: Country
-earth = Country{countryName="earth", ninjas=earth_ninjas,  code='e', promoted= True}
-
-displayCountryWarning :: Char -> String
-displayCountryWarning countryCode
+displayCountryWarning :: [Country] -> Char -> String
+displayCountryWarning state countryCode
     | (promoted country) = (countryName country) ++ " country cannot be included in a fight"
     | otherwise = ""
-    where country = (filter (\x -> code x == countryCode) getCountries)!!0
+    where country = (filter (\x -> code x == countryCode) state)!!0
 
 getTotalAbilityScore :: String -> String -> Int
 getTotalAbilityScore a1 a2 = (getAbilityImpact a1) + (getAbilityImpact a2)
@@ -79,9 +62,6 @@ getAbilityImpact "Summon" = 50
 getAbilityImpact "Storm" = 10
 getAbilityImpact "Rock" = 20
 
-getCountries :: [Country]
-getCountries = [fire, earth, lightning]
-
 uiOptions = "---------------- Options ----------------\n\
             \a) View a Country's Ninja Information \n\
             \b) View All Countries' Ninja Information \n\
@@ -92,6 +72,14 @@ countryInputText = "Enter the country code: "
 invalidCountryInput = "Invalid Country entered"
 availableActions = ['a'..'e']
 availableCountries = "eElLwWnNfF"
+fireIndex = 0
+lightningIndex = 1
+waterIndex = 2
+windIndex = 3
+earthIndex = 4
+
+displayOptions :: IO()
+displayOptions = putStr uiOptions
 
 -- Pattern Matching
 -- | The 'isCountryValid' function checks the user input for validation.
@@ -100,22 +88,16 @@ isCountryValid :: String -> Bool
 isCountryValid [country] = elem country availableCountries -- Matches on exactly one item for a country with this pattern 
 isCountryValid _ = False -- Return False for other inputs
 
-uiController :: IO()
-uiController = do
-    let uiLoop = do
-        putStr uiOptions
-        action <- inputWithText "Enter the action: "
-        selectAction action
-        when (action /= "e") uiLoop -- Do not break the loop until the user want to exit
-    uiLoop -- Start first loop
+getAvailableNinjas :: [Country] -> [Ninja]
+getAvailableNinjas state = allNinjas
+    where allNinjas = ninjas (state!!fireIndex) ++ ninjas (state!!lightningIndex) ++ ninjas (state!!waterIndex) ++ ninjas (state!!earthIndex) ++ ninjas (state!!windIndex)
 
-getAvailableNinjas :: [Ninja]
-getAvailableNinjas = (ninjas fire) ++ (ninjas lightning) ++ (ninjas earth)
-
-getAvailableNinjasByCountry :: Char -> [Ninja]
-getAvailableNinjasByCountry 'f' = (ninjas fire)
-getAvailableNinjasByCountry 'e' = (ninjas earth)
-getAvailableNinjasByCountry 'l' = (ninjas lightning)
+getAvailableNinjasByCountry :: [Country] -> Char -> [Ninja]
+getAvailableNinjasByCountry state 'f' = ninjas (state!!fireIndex)
+getAvailableNinjasByCountry state 'l' = ninjas (state!!lightningIndex)
+getAvailableNinjasByCountry state 'w' = ninjas (state!!waterIndex)
+getAvailableNinjasByCountry state 'e' = ninjas (state!!earthIndex)
+getAvailableNinjasByCountry state 'n' = ninjas (state!!windIndex)
 
 smallerOrEqualNinja :: Ninja -> Ninja -> Bool
 smallerOrEqualNinja n1 n2 
@@ -129,127 +111,167 @@ biggerNinja n1 n2
     | (r n1) == (r n2) && (score n1) < (score n2) = True
     | otherwise = False
 
-qSort :: [Ninja] -> [Ninja]
-qSort []     = []
-qSort (x:xs) = qSort smaller ++ [x] ++ qSort larger
+sortNinjas :: [Ninja] -> [Ninja]
+sortNinjas []     = []
+sortNinjas (x:xs) = sortNinjas smaller ++ [x] ++ sortNinjas larger
   where
     smaller = [a | a <- xs, smallerOrEqualNinja a x]
     larger  = [a | a <- xs, biggerNinja a x]
 
-
-getSortedNinjasByCountry :: Char -> [Ninja]
-getSortedNinjasByCountry c = qSort (getAvailableNinjasByCountry c)
-
-getSortedNinjas :: [Ninja]
-getSortedNinjas = qSort getAvailableNinjas
-
 listNinjas :: [Ninja] -> [String]
 listNinjas = map (show)
 
-displayNinjas :: [Ninja] -> IO()
-displayNinjas = putStr . unlines . listNinjas
+displayNinjas :: [Ninja] -> String
+displayNinjas = unlines . listNinjas
 
-viewNinjasByCountry :: IO() 
-viewNinjasByCountry = do
-    country <- inputWithText countryInputText
-    if isCountryValid country
-        then do
-            let code = toChar country
-            displayNinjas (getSortedNinjasByCountry code)
-            putStrLn (displayCountryWarning code)
-        else putStrLn invalidCountryInput
+viewNinjasByCountry :: [Country] -> String -> ([Country], String) 
+viewNinjasByCountry state countryCode
+    | not (isCountryValid countryCode) = (state, invalidCountryInput)
+    | otherwise                        = (state, output ++ warning)
+    where output = displayNinjas (sortNinjas (getAvailableNinjasByCountry state (toChar countryCode)))
+          warning = displayCountryWarning state (toChar countryCode)
 
-viewPromotedNinjas :: IO()
-viewPromotedNinjas = displayNinjas promotedNinjas
-    where promotedNinjas = filter (\x -> status x == "Journeyman") getAvailableNinjas 
+displayPromotedNinjas :: [Country] -> String
+displayPromotedNinjas state = displayNinjas promotedNinjas
+    where promotedNinjas = filter (\x -> status x == "Journeyman") (getAvailableNinjas state)
 
-viewNinjas :: IO()
-viewNinjas = displayNinjas getSortedNinjas
-
+viewNinjas :: [Country] -> ([Country], String)
+viewNinjas state = (state, displayNinjas (sortNinjas (getAvailableNinjas state)))
 
 -- | This function removes the loser ninja from the country list.
 -- input1: Loser ninja (will be removed)
 -- output: Return the updated ninjas of country
-removeNinjaFromCountry :: Ninja -> [Ninja]
-removeNinjaFromCountry loser = ninjas fire
-
+-- TODO: Remove ninja from the current state and return the updated state
+removeNinjaFromCountry :: [Country] -> Ninja -> [Country]
+removeNinjaFromCountry state loser = state
 
 -- | This function arrange winner score, round and status from the country list.
 -- input1: Winner ninja
 -- output: Return the updated ninja
-updateWinnerNinja :: Ninja -> Ninja
-updateWinnerNinja winner = winner
+-- TODO: Update the winner ninja from in the current state and return the updated state and ninja.
+updateWinnerNinja :: [Country] -> Ninja -> ([Country], Ninja)
+updateWinnerNinja state winner = (state, winner)
 
-arrangeRoundResults :: Ninja -> Ninja -> String
-arrangeRoundResults winner loser =
-    let _ = removeNinjaFromCountry loser
-        result = showWinner (updateWinnerNinja winner)
-    in result
+arrangeRoundResults :: [Country] -> (Ninja, Ninja) -> ([Country], String)
+arrangeRoundResults state (winner, loser) = (updatedState, showWinner updatedNinja)
+    where (updatedState, updatedNinja) = updateWinnerNinja (removeNinjaFromCountry state loser) winner
 
-selectRandomWinner :: Ninja -> Ninja -> (Ninja, Ninja)
-selectRandomWinner first second 
+selectRandomWinner :: (Ninja, Ninja) -> (Ninja, Ninja)
+selectRandomWinner (first, second) 
     | randInt == 0  = (first, second)
     | otherwise     = (second, first)
     where randInt = 0
 
-roundBetweenNinjas :: Ninja -> Ninja -> String
-roundBetweenNinjas ninja1 ninja2 
-    | ninja1 > ninja2   = arrangeRoundResults ninja1 ninja2
-    | ninja1 < ninja2   = arrangeRoundResults ninja2 ninja1
-    | otherwise         = arrangeRoundResults (fst randomNinjas) (snd randomNinjas)
-    where randomNinjas = selectRandomWinner ninja1 ninja2
+roundBetweenNinjas :: [Country] -> (Ninja, Ninja) -> ([Country], String)
+roundBetweenNinjas state (ninja1, ninja2) 
+    | ninja1 > ninja2   = arrangeRoundResults state (ninja1, ninja2)
+    | ninja1 < ninja2   = arrangeRoundResults state (ninja2, ninja1)
+    | otherwise         = arrangeRoundResults state (winner, loser)
+    where (winner, loser) = selectRandomWinner (ninja1, ninja2)
 
 showWinner :: Ninja -> String
-showWinner n = "Winner: \"" ++ (name n) ++ ", Round: " ++ (show (r n)) ++ ", Status: " ++ (status n) ++ "\""
+showWinner n = "Winner: \"" ++ (name n) ++ ", Round: " ++ (show (r n)) ++ ", Status: " ++ (status n) ++ "\"\n"
 
-findNinjaByNameAndCountry :: String -> Char -> [Ninja]
-findNinjaByNameAndCountry nameOfNinja country = filter (\x -> name x == nameOfNinja) (getAvailableNinjasByCountry country) 
+findNinjaByNameAndCountry :: [Country] -> String -> Char -> [Ninja]
+findNinjaByNameAndCountry state nameOfNinja countryCode = filter (\x -> name x == nameOfNinja) (getAvailableNinjasByCountry state countryCode) 
 
-displayRoundBetweenNinjas :: String -> String -> String -> String -> String
-displayRoundBetweenNinjas nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja
-    | not (isCountryValid countryOfFirstNinja)  = "Country of first ninja does not exist."
-    | not (isCountryValid countryOfSecondNinja) = "Country of second ninja does not exist."
-    | length firstNinja == 0                    = "First ninja that you entered not found for given country"
-    | length secondNinja == 0                   = "Second ninja that you entered not found for given country"
-    | otherwise                                 = roundBetweenNinjas (head firstNinja) (head secondNinja)
-    where firstNinja = findNinjaByNameAndCountry nameOfFirstNinja (toChar countryOfFirstNinja)
-          secondNinja = findNinjaByNameAndCountry nameOfSecondNinja (toChar countryOfSecondNinja)
+viewRoundNinjas :: [Country] -> String -> String -> String -> String -> ([Country], String)
+viewRoundNinjas state nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja
+    | not (isCountryValid countryOfFirstNinja)  = (state, "Country of first ninja does not exist.\n")
+    | not (isCountryValid countryOfSecondNinja) = (state, "Country of second ninja does not exist.\n")
+    | length ninjasOfFirstCountry == 0          = (state, "First ninja that you entered not found for given country.\n")
+    | length ninjasOfSecondCountry == 0         = (state, "Second ninja that you entered not found for given country.\n")
+    | otherwise                                 = roundBetweenNinjas state ((head ninjasOfFirstCountry), (head ninjasOfSecondCountry))
+    where ninjasOfFirstCountry = findNinjaByNameAndCountry state nameOfFirstNinja (toChar countryOfFirstNinja)
+          ninjasOfSecondCountry = findNinjaByNameAndCountry state nameOfSecondNinja (toChar countryOfSecondNinja)
 
-viewRoundNinjas :: IO()
-viewRoundNinjas = do
-    nameOfFirstNinja <- inputWithText "Enter the name of the first ninja: "
-    countryOfFirstNinja <- inputWithText "Enter the country code of the first ninja: "
-    nameOfSecondNinja <- inputWithText "Enter the name of the second ninja: "
-    countryOfSecondNinja <- inputWithText "Enter the country code of the second ninja: "
-    putStrLn (displayRoundBetweenNinjas nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja ++ "\n")
+viewRoundCountries :: [Country] -> String -> String -> ([Country], String)
+viewRoundCountries state firstCountryCode secondCountryCode
+    | not (isCountryValid firstCountryCode)  = (state, "First country code does not exist.\n")
+    | not (isCountryValid secondCountryCode) = (state, "Second country code does not exist.\n")
+    | length ninjasOne == 0                  = (state, "There are no ninjas left to fight for first country.\n")
+    | length ninjasTwo == 0                  = (state, "There are no ninjas left to fight for second country.\n")
+    | warningForFirstCountry /= ""           = (state, warningForFirstCountry)
+    | warningForSecondCountry /= ""          = (state, warningForSecondCountry)
+    | otherwise                              = roundBetweenNinjas state ((head ninjasOne), (head ninjasTwo))
+    where ninjasOne = sortNinjas (getAvailableNinjasByCountry state (toChar firstCountryCode))
+          ninjasTwo = sortNinjas (getAvailableNinjasByCountry state (toChar secondCountryCode))
+          warningForFirstCountry = displayCountryWarning state (toChar firstCountryCode)
+          warningForSecondCountry = displayCountryWarning state (toChar secondCountryCode)
 
-displayRoundBetweenCountries :: String -> String -> String
-displayRoundBetweenCountries firstCountryCode secondCountryCode
-    | not (isCountryValid firstCountryCode)  = "First country code does not exist."
-    | not (isCountryValid secondCountryCode) = "Second country code does not exist."
-    | length ninjasOne == 0                  = "There are no ninjas left to fight for first country"
-    | length ninjasTwo == 0                  = "There are no ninjas left to fight for second country"
-    | warningForFirstCountry /= ""           = warningForFirstCountry
-    | warningForSecondCountry /= ""          = warningForSecondCountry
-    | otherwise                              = roundBetweenNinjas (head ninjasOne) (head ninjasTwo)
-    where ninjasOne = getAvailableNinjasByCountry (toChar firstCountryCode)
-          ninjasTwo = getAvailableNinjasByCountry (toChar secondCountryCode)
-          warningForFirstCountry = displayCountryWarning (toChar firstCountryCode)
-          warningForSecondCountry = displayCountryWarning (toChar secondCountryCode)
+data Input = ViewNinjas
+  | ViewNinjasByCountry String
+  | RoundNinja String String String String
+  | RoundCountry String String
+  | Exit
+  | Invalid
 
-viewRoundCountries :: IO()
-viewRoundCountries = do
-    firstCountryCode <- inputWithText "Enter the first country code: "
-    secondCountryCode <- inputWithText "Enter the second country code: "
-    putStrLn (displayRoundBetweenCountries firstCountryCode secondCountryCode ++ "\n")
-    
-selectAction :: String -> IO()
-selectAction "a" = viewNinjasByCountry
-selectAction "b" = viewNinjas
-selectAction "c" = viewRoundNinjas
-selectAction "d" = viewRoundCountries
-selectAction "e" = viewPromotedNinjas
-selectAction _ = putStrLn "Invalid Action entered"
+readInput :: IO Input
+readInput = do
+    action <- inputWithText "Enter the action: "
+    case action of
+        "a" -> do
+            countryCode <- inputWithText "Enter the country code: "
+            return (ViewNinjasByCountry countryCode)
+        "b" -> return ViewNinjas
+        "c" -> do
+            nameOfFirstNinja <- inputWithText "Enter the name of the first ninja: "
+            countryOfFirstNinja <- inputWithText "Enter the country code of the first ninja: "
+            nameOfSecondNinja <- inputWithText "Enter the name of the second ninja: "
+            countryOfSecondNinja <- inputWithText "Enter the country code of the second ninja: "
+            return (RoundNinja nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja)
+        "d" -> do
+            firstCountryCode <- inputWithText "Enter the first country code: "
+            secondCountryCode <- inputWithText "Enter the second country code: "
+            return (RoundCountry firstCountryCode secondCountryCode)
+        "e" -> return Exit
+        _ -> return Invalid
+
+
+processUserInput :: [Country] -> Input -> ([Country], String)
+processUserInput state (ViewNinjasByCountry countryCode) = viewNinjasByCountry state countryCode
+processUserInput state (ViewNinjas) = viewNinjas state
+processUserInput state (RoundNinja a b c d) = viewRoundNinjas state a b c d
+processUserInput state (RoundCountry firstCountryCode secondCountryCode) = viewRoundCountries state firstCountryCode secondCountryCode
+
+mainLoop :: [Country] -> IO()
+mainLoop currentState = do
+    displayOptions
+    input <- readInput
+
+    case input of
+        Invalid -> do
+            putStrLn "Invalid Action Entered."
+            mainLoop currentState
+        Exit -> do
+            putStrLn (displayPromotedNinjas currentState)
+            return ()
+        _ -> do
+            let (nextState, output) = processUserInput currentState input
+            putStrLn output
+            mainLoop nextState
 
 main = do  
-    uiController -- Starts the ui controller
+    -- Read from file and init variables
+    let ninja1 = Ninja {name="Naruto", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, abilityScore=140, score=133.5}
+    let ninja2 = Ninja {name="Haruki", country='e', status="Journeyman", exam1=40, exam2=75, ability1="Lightning", ability2="Summon", r=0, abilityScore=140, score=133.5}
+    let ninja3 = Ninja {name="Hiroshi", country='f', status="Junior", exam1=40, exam2=75, ability1="Water", ability2="Summon", r=0, abilityScore=90, score=150.2}
+    let ninja4 = Ninja {name="Sasuke", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=150.2}
+    let ninja5 = Ninja {name="five", country='w', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
+    let ninja6 = Ninja {name="six", country='w', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
+    let ninja7 = Ninja {name="seven", country='n', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=2, abilityScore=150, score=130.2}
+    
+    let fire_ninjas = [ninja1, ninja3]
+    let earth_ninjas = [ninja2]
+    let lightning_ninjas = [ninja4]
+    let water_ninjas = [ninja5, ninja6]
+    let wind_ninjas = [ninja7]
+
+    let fire = Country{countryName="fire", ninjas=fire_ninjas, code='f', promoted= False}
+    let lightning = Country{countryName="lightning", ninjas=lightning_ninjas, code='l', promoted= False}
+    let earth = Country{countryName="earth", ninjas=earth_ninjas,  code='e', promoted= False}
+    let wind = Country{countryName="wind", ninjas=wind_ninjas,  code='n', promoted= False}    
+    let water = Country{countryName="water", ninjas=water_ninjas,  code='w', promoted= False}
+    
+    let initialState = [fire, lightning, water, wind, earth]
+    mainLoop initialState
