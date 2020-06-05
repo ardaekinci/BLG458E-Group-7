@@ -54,13 +54,15 @@ qSort (x:xs) = qSort smaller ++ [x] ++ qSort larger
     larger  = [b | b <- xs, compareNinja b x]
 
 
+getNinjasWithCountryCode :: Char -> [Ninja]
+
 getNinjasByCountry :: Char -> [Ninja]
 getNinjasByCountry 'f' = qSort fire
 getNinjasByCountry 'l' = qSort lightning
 getNinjasByCountry 'w' = qSort water
 
 getAvailableNinjas :: [Ninja]
-getAvailableNinjas = (fire ++ lightning ++ water)
+getAvailableNinjas = ( (ninjas fire) ++ (ninjas lightning) ++ (ninjas water) ) 
 
 getNinjas :: [Ninja]
 getNinjas = qSort getAvailableNinjas
@@ -79,3 +81,25 @@ sortNinjas(x:xs) = insertNinja x : sortNinjas xs
 -- give wwarning if country has already promoted ninja
 
 -- main = print(sortNinjas fire)
+
+fixedPoint :: (Float -> Float) -> Float -> Float
+fixedPoint f x0 = fpIter x0
+  where
+    fpIter :: Float -> Float
+    fpIter x
+      | isCloseEnough x x' = x'
+      | otherwise          = fpIter x'
+      where x' = f x
+
+    isCloseEnough :: Float -> Float -> Bool
+    isCloseEnough x x' = (abs (x' - x) / x) < 0.001
+
+myfunc :: (Ninja -> Ninja -> Ninja) -> String
+myfunc f s = updateNinja s
+	where
+		updateNinja :: Ninja -> Ninja -> Ninja
+		updateNinja winner loser = updateWinner winner && 
+		
+
+
+
