@@ -4,7 +4,8 @@ import Data.List
 import Data.Char
 import Data.Ord
 
-data Ninja = Ninja{name:: String, country:: Char,score:: Float, r:: Int} deriving(Eq, Show)
+
+data Ninja = Ninja{name:: String, country:: Char,score:: Float, r:: Int} deriving Show
 
 first = Ninja{name="first", country='f', score=130.1, r=0}
 sec = Ninja{name="sec", country='f', score=110.1, r=0}
@@ -29,24 +30,14 @@ lightning = [third,fourth]
 water :: [Ninja] 
 water = [fifth,sixth]
 
--- keep all countries list 
-all_countries :: [Ninja]
-all_countries = [s,first,c,b,sec,third,fourth,fifth,sixth]
-
-
---insertNinja :: Ninja -> [Ninja]
---insertNinja x -- insert each element
-
---sortNinjas :: [Ninja] -> [Ninja]
---sortNinjas  []     = []
---sortNinjas [x] = [insertNinja x]
---sortNinjas(x:xs) = insertNinja x : sortNinjas xs
-
+data Country = Country{name :: String, ninjas :: [Ninja], code :: Char, promoted :: Bool} deriving Show
+c1 = Country{name="fire", ninjas = fire, code='f', promoted= False}
+c2 = Country{name="water", ninjas = lightning ,code='w', promoted= False}
+c3 = Country{name="earth", ninjas= water,  code='e', promoted= False}
 
 --instance Ord Ninja where
   --compare a b = if (r a) == (r b) then compare (score b) (score a) else compare (r a) (r b)
 
--- write a special comparision for ninja first check round and then score**
 
 compareNinja :: Ninja -> Ninja -> Bool
 compareNinja n1 n2 
@@ -62,6 +53,27 @@ qSort (x:xs) = qSort smaller ++ [x] ++ qSort larger
     smaller = [a | a <- xs, compareNinja x a]
     larger  = [b | b <- xs, compareNinja b x]
 
+
+getNinjasByCountry :: Char -> [Ninja]
+getNinjasByCountry 'f' = qSort fire
+getNinjasByCountry 'l' = qSort lightning
+getNinjasByCountry 'w' = qSort water
+
+getAvailableNinjas :: [Ninja]
+getAvailableNinjas = (fire ++ lightning ++ water)
+
+getNinjas :: [Ninja]
+getNinjas = qSort getAvailableNinjas
+
+
+insertNinja :: Ninja -> Ninja
+insertNinja x = x -- compare function for ninjas
+
+
+sortNinjas :: [Ninja] -> [Ninja]
+sortNinjas  []     = []
+sortNinjas [x] = [insertNinja x]
+sortNinjas(x:xs) = insertNinja x : sortNinjas xs
 
 -- call qSort with the selected country, print the list 
 -- give wwarning if country has already promoted ninja
