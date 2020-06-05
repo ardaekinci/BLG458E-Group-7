@@ -40,11 +40,11 @@ instance Show Ninja where
 
 data Country = Country{countryName :: String, ninjas :: [Ninja], code :: Char, promoted :: Bool}
 
-displayCountryWarning :: Char -> String
-displayCountryWarning countryCode
+displayCountryWarning :: [Country] -> Char -> String
+displayCountryWarning state countryCode
     | (promoted country) = (countryName country) ++ " country cannot be included in a fight"
     | otherwise = ""
-    where country = (filter (\x -> code x == countryCode) getCountries)!!0
+    where country = (filter (\x -> code x == countryCode) state)!!0
 
 getTotalAbilityScore :: String -> String -> Int
 getTotalAbilityScore a1 a2 = (getAbilityImpact a1) + (getAbilityImpact a2)
@@ -62,9 +62,6 @@ getAbilityImpact "Summon" = 50
 getAbilityImpact "Storm" = 10
 getAbilityImpact "Rock" = 20
 
-getCountries :: [Country]
-getCountries = [fire, earth, lightning]
-
 uiOptions = "---------------- Options ----------------\n\
             \a) View a Country's Ninja Information \n\
             \b) View All Countries' Ninja Information \n\
@@ -75,6 +72,11 @@ countryInputText = "Enter the country code: "
 invalidCountryInput = "Invalid Country entered"
 availableActions = ['a'..'e']
 availableCountries = "eElLwWnNfF"
+fireIndex = 0
+lightningIndex = 1
+waterIndex = 2
+windIndex = 3
+earthIndex = 4
 
 diplayOptions :: IO()
 displayOptins = putStr uiOptions
@@ -95,13 +97,16 @@ uiController = do
         when (action /= "e") uiLoop -- Do not break the loop until the user want to exit
     uiLoop -- Start first loop
 
-getAvailableNinjas :: [Ninja]
-getAvailableNinjas = (ninjas fire) ++ (ninjas lightning) ++ (ninjas earth)
+getAvailableNinjas :: [Country] -> [Ninja]
+getAvailableNinjas state = allNinjas
+    where allNinjas = ninjas (state!!fireIndex) ++ ninjas (state!!lightningIndex) ++ ninjas (state!!waterIndex) ++ ninjas (state!!earthIndex) ++ ninjas (state!!windIndex)
 
-getAvailableNinjasByCountry :: Char -> [Ninja]
-getAvailableNinjasByCountry 'f' = (ninjas fire)
-getAvailableNinjasByCountry 'e' = (ninjas earth)
-getAvailableNinjasByCountry 'l' = (ninjas lightning)
+getAvailableNinjasByCountry :: [Country] -> Char -> [Ninja]
+getAvailableNinjasByCountry state 'f' = ninjas (state!!fireIndex)
+getAvailableNinjasByCountry state 'l' = ninjas (state!!lightningIndex)
+getAvailableNinjasByCountry state 'w' = ninjas (state!!waterIndex)
+getAvailableNinjasByCountry state 'e' = ninjas (state!!earthIndex)
+getAvailableNinjasByCountry state 'n' = ninjas (state!!windIndex)
 
 smallerOrEqualNinja :: Ninja -> Ninja -> Bool
 smallerOrEqualNinja n1 n2 
@@ -115,42 +120,34 @@ biggerNinja n1 n2
     | (r n1) == (r n2) && (score n1) < (score n2) = True
     | otherwise = False
 
-qSort :: [Ninja] -> [Ninja]
-qSort []     = []
-qSort (x:xs) = qSort smaller ++ [x] ++ qSort larger
+sortNinjas :: [Ninja] -> [Ninja]
+sortNinjas []     = []
+sortNinjas (x:xs) = sortNinjas smaller ++ [x] ++ sortNinjas larger
   where
     smaller = [a | a <- xs, smallerOrEqualNinja a x]
     larger  = [a | a <- xs, biggerNinja a x]
 
-
-getSortedNinjasByCountry :: Char -> [Ninja]
-getSortedNinjasByCountry c = qSort (getAvailableNinjasByCountry c)
-
-getSortedNinjas :: [Ninja]
-getSortedNinjas = qSort getAvailableNinjas
-
 listNinjas :: [Ninja] -> [String]
 listNinjas = map (show)
 
-displayNinjas :: [Ninja] -> IO()
-displayNinjas = putStr . unlines . listNinjas
+displayNinjas :: [Ninja] -> String
+displayNinjas = unlines . listNinjas
 
-viewNinjasByCountry :: IO() 
-viewNinjasByCountry = do
-    country <- inputWithText countryInputText
-    if isCountryValid country
+viewNinjasByCountry :: [Country] -> String -> ([Country], String) 
+viewNinjasByCountry state countryCode = do
+    if isCountryValid countryCode
         then do
-            let code = toChar country
-            displayNinjas (getSortedNinjasByCountry code)
-            putStrLn (displayCountryWarning code)
-        else putStrLn invalidCountryInput
+            let output = displayNinjas (sortNinjas (getAvailableNinjasByCountry state (toChar countryCode))
+            let warning = displayCountryWarning state countryCode
+            return (state, output ++ warning)
+        else return (state, invalidCountryInput)
 
 viewPromotedNinjas :: IO()
 viewPromotedNinjas = displayNinjas promotedNinjas
     where promotedNinjas = filter (\x -> status x == "Journeyman") getAvailableNinjas 
 
-viewNinjas :: IO()
-viewNinjas = displayNinjas getSortedNinjas
+viewNinjas :: [Country] -> ([Country], String)
+viewNinjas state = displayNinjas (sortNinjas (getAvailableNinjas state))
 
 
 -- | This function removes the loser ninja from the country list.
@@ -228,14 +225,6 @@ viewRoundCountries = do
     firstCountryCode <- inputWithText "Enter the first country code: "
     secondCountryCode <- inputWithText "Enter the second country code: "
     putStrLn (displayRoundBetweenCountries firstCountryCode secondCountryCode ++ "\n")
-    
-selectAction :: String -> IO()
-selectAction "a" = viewNinjasByCountry
-selectAction "b" = viewNinjas
-selectAction "c" = viewRoundNinjas
-selectAction "d" = viewRoundCountries
-selectAction "e" = viewPromotedNinjas
-selectAction _ = putStrLn "Invalid Action entered"
 
 data Input = ViewNinjas
   | ViewNinjasByCountry String
@@ -264,6 +253,12 @@ readInput = do
         "e" -> return Exit
 
 
+processUserInput :: [Country] -> Input -> ([Country], String)
+processUserInput state (ViewNinjasByCountry countryCode) = viewNinjasByCountry state countryCode
+processUserInput state (ViewNinjas) = viewNinjas state
+processUserInput state (RoundNinja a b c d) = viewRoundNinjas state a b c d
+processUserInput state (RoundCountry firstCountryCode secondCountryCode) = viewRoundCountries state firstCountryCode secondCountryCode
+
 mainLoop :: [Country] -> IO()
 mainLoop currentState = do
     diplayOptions
@@ -284,20 +279,26 @@ main = do
     ninja2 = Ninja {name="Haruki", country='e', status="Journeyman", exam1=40, exam2=75, ability1="Lightning", ability2="Summon", r=0, abilityScore=140, score=133.5}
     ninja3 = Ninja {name="Hiroshi", country='f', status="Junior", exam1=40, exam2=75, ability1="Water", ability2="Summon", r=0, abilityScore=90, score=150.2}
     ninja4 = Ninja {name="Sasuke", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=150.2}
-    ninja5 = Ninja {name="five", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
-    ninja6 = Ninja {name="six", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
-    ninja7 = Ninja {name="seven", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=2, abilityScore=150, score=130.2}
+    ninja5 = Ninja {name="five", country='w', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
+    ninja6 = Ninja {name="six", country='w', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
+    ninja7 = Ninja {name="seven", country='n', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=2, abilityScore=150, score=130.2}
     
     fire_ninjas = [ninja1, ninja3]
     earth_ninjas = [ninja2]
-    lightning_ninjas = [ninja4, ninja5, ninja6, ninja7]
+    lightning_ninjas = [ninja4]
+    water_ninjas = [ninja5, ninja6]
+    wind_ninjas = [ninja7]
 
     fire :: Country
     fire = Country{countryName="fire", ninjas=fire_ninjas, code='f', promoted= False}
     lightning :: Country
     lightning = Country{countryName="lightning", ninjas=lightning_ninjas, code='l', promoted= False}
     earth :: Country
-    earth = Country{countryName="earth", ninjas=earth_ninjas,  code='e', promoted= True}
+    earth = Country{countryName="earth", ninjas=earth_ninjas,  code='e', promoted= False}
+    wind :: Country
+    wind = Country{countryName="wind", ninjas=wind_ninjas,  code='n', promoted= False}
+    water :: Country
+    water = Country{countryName="water", ninjas=water_ninjas,  code='w', promoted= False}
     
-    let initial_state = [fire, lightning, earth]
+    let initial_state = [fire, lightning, water, wind, earth]
     mainLoop initial_state
