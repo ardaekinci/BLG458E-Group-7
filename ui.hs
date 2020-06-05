@@ -125,14 +125,11 @@ displayNinjas :: [Ninja] -> String
 displayNinjas = unlines . listNinjas
 
 viewNinjasByCountry :: [Country] -> String -> ([Country], String) 
-viewNinjasByCountry state countryCode = do
-    if isCountryValid countryCode
-        then do
-            let output = displayNinjas (sortNinjas (getAvailableNinjasByCountry state (toChar countryCode)))
-            let warning = displayCountryWarning state (toChar countryCode)
-            return (state, output ++ warning)
-        else 
-            return (state, invalidCountryInput)
+viewNinjasByCountry state countryCode
+    | not (isCountryValid countryCode) = (state, invalidCountryInput)
+    | otherwise                        = (state, output ++ warning)
+    where output = displayNinjas (sortNinjas (getAvailableNinjasByCountry state (toChar countryCode)))
+          warning = displayCountryWarning state (toChar countryCode)
 
 displayPromotedNinjas :: [Country] -> String
 displayPromotedNinjas state = displayNinjas promotedNinjas
@@ -141,14 +138,12 @@ displayPromotedNinjas state = displayNinjas promotedNinjas
 viewNinjas :: [Country] -> ([Country], String)
 viewNinjas state = (state, displayNinjas (sortNinjas (getAvailableNinjas state)))
 
-
 -- | This function removes the loser ninja from the country list.
 -- input1: Loser ninja (will be removed)
 -- output: Return the updated ninjas of country
 -- TODO: Remove ninja from the current state and return the updated state
 removeNinjaFromCountry :: [Country] -> Ninja -> [Country]
 removeNinjaFromCountry state loser = state
-
 
 -- | This function arrange winner score, round and status from the country list.
 -- input1: Winner ninja
@@ -158,8 +153,8 @@ updateWinnerNinja :: [Country] -> Ninja -> ([Country], Ninja)
 updateWinnerNinja state winner = (state, winner)
 
 arrangeRoundResults :: [Country] -> (Ninja, Ninja) -> ([Country], String)
-arrangeRoundResults state (winner, loser) = (state, showWinner updatedNinja)
-    where (state, updatedNinja) = updateWinnerNinja (removeNinjaFromCountry state loser) winner
+arrangeRoundResults state (winner, loser) = (updatedState, showWinner updatedNinja)
+    where (updatedState, updatedNinja) = updateWinnerNinja (removeNinjaFromCountry state loser) winner
 
 selectRandomWinner :: (Ninja, Ninja) -> (Ninja, Ninja)
 selectRandomWinner (first, second) 
@@ -199,8 +194,8 @@ viewRoundCountries state firstCountryCode secondCountryCode
     | warningForFirstCountry /= ""           = (state, warningForFirstCountry)
     | warningForSecondCountry /= ""          = (state, warningForSecondCountry)
     | otherwise                              = roundBetweenNinjas state ((head ninjasOne), (head ninjasTwo))
-    where ninjasOne = getAvailableNinjasByCountry state (toChar firstCountryCode)
-          ninjasTwo = getAvailableNinjasByCountry state (toChar secondCountryCode)
+    where ninjasOne = sortNinjas (getAvailableNinjasByCountry state (toChar firstCountryCode))
+          ninjasTwo = sortNinjas (getAvailableNinjasByCountry state (toChar secondCountryCode))
           warningForFirstCountry = displayCountryWarning state (toChar firstCountryCode)
           warningForSecondCountry = displayCountryWarning state (toChar secondCountryCode)
 
@@ -209,6 +204,7 @@ data Input = ViewNinjas
   | RoundNinja String String String String
   | RoundCountry String String
   | Exit
+  | Invalid
 
 readInput :: IO Input
 readInput = do
@@ -229,6 +225,7 @@ readInput = do
             secondCountryCode <- inputWithText "Enter the second country code: "
             return (RoundCountry firstCountryCode secondCountryCode)
         "e" -> return Exit
+        _ -> return Invalid
 
 
 processUserInput :: [Country] -> Input -> ([Country], String)
@@ -243,6 +240,9 @@ mainLoop currentState = do
     input <- readInput
 
     case input of
+        Invalid -> do
+            putStrLn "Invalid Action Entered."
+            mainLoop currentState
         Exit -> do
             putStrLn (displayPromotedNinjas currentState)
             return ()
