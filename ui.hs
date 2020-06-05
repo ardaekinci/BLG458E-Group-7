@@ -37,25 +37,8 @@ instance Ord Ninja where
 instance Show Ninja where
    show (Ninja name _ status score _ _ _ _ _ r) = name ++ ", Score: " ++ (show score) ++ ", Status: " ++ status ++ ", Round: " ++ (show r)
 
-ninja1 = Ninja {name="Naruto", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, abilityScore=140, score=133.5}
-ninja2 = Ninja {name="Haruki", country='e', status="Journeyman", exam1=40, exam2=75, ability1="Lightning", ability2="Summon", r=0, abilityScore=140, score=133.5}
-ninja3 = Ninja {name="Hiroshi", country='f', status="Junior", exam1=40, exam2=75, ability1="Water", ability2="Summon", r=0, abilityScore=90, score=150.2}
-ninja4 = Ninja {name="Sasuke", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=150.2}
-ninja5 = Ninja {name="five", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
-ninja6 = Ninja {name="six", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
-ninja7 = Ninja {name="seven", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=2, abilityScore=150, score=130.2}
 
-fire_ninjas = [ninja1, ninja3]
-earth_ninjas = [ninja2]
-lightning_ninjas = [ninja4, ninja5, ninja6, ninja7]
-
-data Country = Country{countryName :: String, ninjas :: [Ninja], code :: Char, promoted :: Bool} deriving Show
-fire :: Country
-fire = Country{countryName="fire", ninjas=fire_ninjas, code='f', promoted= False}
-lightning :: Country
-lightning = Country{countryName="lightning", ninjas=lightning_ninjas, code='l', promoted= False}
-earth :: Country
-earth = Country{countryName="earth", ninjas=earth_ninjas,  code='e', promoted= True}
+data Country = Country{countryName :: String, ninjas :: [Ninja], code :: Char, promoted :: Bool}
 
 displayCountryWarning :: Char -> String
 displayCountryWarning countryCode
@@ -92,6 +75,9 @@ countryInputText = "Enter the country code: "
 invalidCountryInput = "Invalid Country entered"
 availableActions = ['a'..'e']
 availableCountries = "eElLwWnNfF"
+
+diplayOptions :: IO()
+displayOptins = putStr uiOptions
 
 -- Pattern Matching
 -- | The 'isCountryValid' function checks the user input for validation.
@@ -251,5 +237,67 @@ selectAction "d" = viewRoundCountries
 selectAction "e" = viewPromotedNinjas
 selectAction _ = putStrLn "Invalid Action entered"
 
+data Input = ViewNinjas
+  | ViewNinjasByCountry String
+  | RoundNinja String String String String
+  | RoundCountry String String
+  | Exit
+
+readInput :: IO Input
+readInput = do
+    action <- inputWithText "Enter the action: "
+    case action of
+        "a" -> do
+            countryCode <- inputWithText "Enter the country code: "
+            return (ViewNinjasByCountry countryCode)
+        "b" -> return ViewNinjas
+        "c" -> do
+            nameOfFirstNinja <- inputWithText "Enter the name of the first ninja: "
+            countryOfFirstNinja <- inputWithText "Enter the country code of the first ninja: "
+            nameOfSecondNinja <- inputWithText "Enter the name of the second ninja: "
+            countryOfSecondNinja <- inputWithText "Enter the country code of the second ninja: "
+            return (RoundNinja nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja)
+        "d" -> do
+            firstCountryCode <- inputWithText "Enter the first country code: "
+            secondCountryCode <- inputWithText "Enter the second country code: "
+            return (RoundCountry firstCountryCode secondCountryCode)
+        "e" -> return Exit
+
+
+mainLoop :: [Country] -> IO()
+mainLoop currentState = do
+    diplayOptions
+    input <- readInput
+
+    case input of
+        Exit -> do
+            viewPromotedNinjas
+            return ()
+        _ -> do
+            let (nextState, output) = processUserInput currentState input
+            putStrLn output
+            mainLoop nextState
+
 main = do  
-    uiController -- Starts the ui controller
+    -- Read from file and init variables
+    ninja1 = Ninja {name="Naruto", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, abilityScore=140, score=133.5}
+    ninja2 = Ninja {name="Haruki", country='e', status="Journeyman", exam1=40, exam2=75, ability1="Lightning", ability2="Summon", r=0, abilityScore=140, score=133.5}
+    ninja3 = Ninja {name="Hiroshi", country='f', status="Junior", exam1=40, exam2=75, ability1="Water", ability2="Summon", r=0, abilityScore=90, score=150.2}
+    ninja4 = Ninja {name="Sasuke", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=150.2}
+    ninja5 = Ninja {name="five", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
+    ninja6 = Ninja {name="six", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
+    ninja7 = Ninja {name="seven", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=2, abilityScore=150, score=130.2}
+    
+    fire_ninjas = [ninja1, ninja3]
+    earth_ninjas = [ninja2]
+    lightning_ninjas = [ninja4, ninja5, ninja6, ninja7]
+
+    fire :: Country
+    fire = Country{countryName="fire", ninjas=fire_ninjas, code='f', promoted= False}
+    lightning :: Country
+    lightning = Country{countryName="lightning", ninjas=lightning_ninjas, code='l', promoted= False}
+    earth :: Country
+    earth = Country{countryName="earth", ninjas=earth_ninjas,  code='e', promoted= True}
+    
+    let initial_state = [fire, lightning, earth]
+    mainLoop initial_state
