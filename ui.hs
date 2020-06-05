@@ -40,11 +40,14 @@ instance Show Ninja where
 ninja1 = Ninja {name="Naruto", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, abilityScore=140, score=133.5}
 ninja2 = Ninja {name="Haruki", country='e', status="Journeyman", exam1=40, exam2=75, ability1="Lightning", ability2="Summon", r=0, abilityScore=140, score=133.5}
 ninja3 = Ninja {name="Hiroshi", country='f', status="Junior", exam1=40, exam2=75, ability1="Water", ability2="Summon", r=0, abilityScore=90, score=150.2}
-ninja4 = Ninja {name="Sasuke", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=0, abilityScore=150, score=150.2}
+ninja4 = Ninja {name="Sasuke", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=150.2}
+ninja5 = Ninja {name="five", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
+ninja6 = Ninja {name="six", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
+ninja7 = Ninja {name="seven", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=2, abilityScore=150, score=130.2}
 
 fire_ninjas = [ninja1, ninja3]
 earth_ninjas = [ninja2]
-lightning_ninjas = [ninja4]
+lightning_ninjas = [ninja4, ninja5, ninja6, ninja7]
 
 data Country = Country{countryName :: String, ninjas :: [Ninja], code :: Char, promoted :: Bool} deriving Show
 fire :: Country
@@ -114,6 +117,32 @@ getAvailableNinjasByCountry 'f' = (ninjas fire)
 getAvailableNinjasByCountry 'e' = (ninjas earth)
 getAvailableNinjasByCountry 'l' = (ninjas lightning)
 
+smallerOrEqualNinja :: Ninja -> Ninja -> Bool
+smallerOrEqualNinja n1 n2 
+    | (r n1) < (r n2) = True
+    | (r n1) == (r n2) && (score n1) >= (score n2) = True
+    | otherwise = False
+
+biggerNinja ::  Ninja -> Ninja -> Bool
+biggerNinja n1 n2 
+    | (r n1) > (r n2) = True
+    | (r n1) == (r n2) && (score n1) < (score n2) = True
+    | otherwise = False
+
+qSort :: [Ninja] -> [Ninja]
+qSort []     = []
+qSort (x:xs) = qSort smaller ++ [x] ++ qSort larger
+  where
+    smaller = [a | a <- xs, smallerOrEqualNinja a x]
+    larger  = [a | a <- xs, biggerNinja a x]
+
+
+getSortedNinjasByCountry :: Char -> [Ninja]
+getSortedNinjasByCountry c = qSort (getAvailableNinjasByCountry c)
+
+getSortedNinjas :: [Ninja]
+getSortedNinjas = qSort getAvailableNinjas
+
 listNinjas :: [Ninja] -> [String]
 listNinjas = map (show)
 
@@ -126,13 +155,17 @@ viewNinjasByCountry = do
     if isCountryValid country
         then do
             let code = toChar country
-            displayNinjas (getAvailableNinjasByCountry code)
+            displayNinjas (getSortedNinjasByCountry code)
             putStrLn (displayCountryWarning code)
         else putStrLn invalidCountryInput
 
-viewNinjas :: IO()
-viewNinjas = displayNinjas promotedNinjas
+viewPromotedNinjas :: IO()
+viewPromotedNinjas = displayNinjas promotedNinjas
     where promotedNinjas = filter (\x -> status x == "Journeyman") getAvailableNinjas 
+
+viewNinjas :: IO()
+viewNinjas = displayNinjas getSortedNinjas
+
 
 -- | This function removes the loser ninja from the country list.
 -- input1: Loser ninja (will be removed)
@@ -215,7 +248,7 @@ selectAction "a" = viewNinjasByCountry
 selectAction "b" = viewNinjas
 selectAction "c" = viewRoundNinjas
 selectAction "d" = viewRoundCountries
-selectAction "e" = viewNinjas
+selectAction "e" = viewPromotedNinjas
 selectAction _ = putStrLn "Invalid Action entered"
 
 main = do  
