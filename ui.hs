@@ -10,7 +10,7 @@ inputWithText text = do
     getLine
 
 toChar :: String -> Char
-toChar [chr] = chr
+toChar [chr] = toLower chr
 toChar _     = error "Wrong Input Supplied. Input Length must be exactly 1"
 
 data Ninja = Ninja {
@@ -79,7 +79,8 @@ getAbilityImpact "Rock" = 20
 getCountries :: [Country]
 getCountries = [fire, earth, lightning]
 
-uiOptions = "a) View a Country's Ninja Information \n\
+uiOptions = "---------------- Options ----------------\n\
+            \a) View a Country's Ninja Information \n\
             \b) View All Countries' Ninja Information \n\
             \c) Make a Round Between Ninjas \n\
             \d) Make a Round Between Countries \n\
@@ -117,17 +118,21 @@ listNinjas :: [Ninja] -> [String]
 listNinjas = map (show)
 
 displayNinjas :: [Ninja] -> IO()
-displayNinjas = putStrLn . unlines . listNinjas
+displayNinjas = putStr . unlines . listNinjas
 
 viewNinjasByCountry :: IO() 
 viewNinjasByCountry = do
     country <- inputWithText countryInputText
     if isCountryValid country
-        then displayNinjas (getAvailableNinjasByCountry (toLower (country!!0)))
+        then do
+            let code = toChar country
+            displayNinjas (getAvailableNinjasByCountry code)
+            putStrLn (displayCountryWarning code)
         else putStrLn invalidCountryInput
 
 viewNinjas :: IO()
-viewNinjas = displayNinjas getAvailableNinjas
+viewNinjas = displayNinjas promotedNinjas
+    where promotedNinjas = filter (\x -> status x == "Journeyman") getAvailableNinjas 
 
 -- | This function removes the loser ninja from the country list.
 -- input1: Loser ninja (will be removed)
@@ -183,13 +188,27 @@ viewRoundNinjas = do
     countryOfFirstNinja <- inputWithText "Enter the country code of the first ninja: "
     nameOfSecondNinja <- inputWithText "Enter the name of the second ninja: "
     countryOfSecondNinja <- inputWithText "Enter the country code of the second ninja: "
-    putStrLn ((displayRoundBetweenNinjas nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja) ++ "\n")
+    putStrLn (displayRoundBetweenNinjas nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja ++ "\n")
+
+displayRoundBetweenCountries :: String -> String -> String
+displayRoundBetweenCountries firstCountryCode secondCountryCode
+    | not (isCountryValid firstCountryCode)  = "First country code does not exist."
+    | not (isCountryValid secondCountryCode) = "Second country code does not exist."
+    | length ninjasOne == 0                  = "There are no ninjas left to fight for first country"
+    | length ninjasTwo == 0                  = "There are no ninjas left to fight for second country"
+    | warningForFirstCountry /= ""           = warningForFirstCountry
+    | warningForSecondCountry /= ""          = warningForSecondCountry
+    | otherwise                              = roundBetweenNinjas (head ninjasOne) (head ninjasTwo)
+    where ninjasOne = getAvailableNinjasByCountry (toChar firstCountryCode)
+          ninjasTwo = getAvailableNinjasByCountry (toChar secondCountryCode)
+          warningForFirstCountry = displayCountryWarning (toChar firstCountryCode)
+          warningForSecondCountry = displayCountryWarning (toChar secondCountryCode)
 
 viewRoundCountries :: IO()
 viewRoundCountries = do
     firstCountryCode <- inputWithText "Enter the first country code: "
     secondCountryCode <- inputWithText "Enter the second country code: "
-    putStrLn ((showWinner ninja1) ++ "\n")
+    putStrLn (displayRoundBetweenCountries firstCountryCode secondCountryCode ++ "\n")
     
 selectAction :: String -> IO()
 selectAction "a" = viewNinjasByCountry
