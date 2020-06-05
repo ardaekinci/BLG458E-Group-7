@@ -60,18 +60,21 @@ displayCountryWarning countryCode
     | otherwise = ""
     where country = (filter (\x -> code x == countryCode) getCountries)!!0
 
-getAbilityScore :: String -> Int
-getAbilityScore "Clone" = 20
-getAbilityScore "Hit" = 10
-getAbilityScore "Lightning" = 50
-getAbilityScore "Vision" = 30
-getAbilityScore "Sand" = 50
-getAbilityScore "Fire" = 40
-getAbilityScore "Water" = 30
-getAbilityScore "Blade" = 20
-getAbilityScore "Summon" = 50
-getAbilityScore "Storm" = 10
-getAbilityScore "Rock" = 20
+getTotalAbilityScore :: String -> String -> Int
+getTotalAbilityScore a1 a2 = (getAbilityImpact a1) + (getAbilityImpact a2)
+
+getAbilityImpact :: String -> Int
+getAbilityImpact "Clone" = 20
+getAbilityImpact "Hit" = 10
+getAbilityImpact "Lightning" = 50
+getAbilityImpact "Vision" = 30
+getAbilityImpact "Sand" = 50
+getAbilityImpact "Fire" = 40
+getAbilityImpact "Water" = 30
+getAbilityImpact "Blade" = 20
+getAbilityImpact "Summon" = 50
+getAbilityImpact "Storm" = 10
+getAbilityImpact "Rock" = 20
 
 getCountries :: [Country]
 getCountries = [fire, earth, lightning]
@@ -85,7 +88,6 @@ countryInputText = "Enter the country code: "
 invalidCountryInput = "Invalid Country entered"
 availableActions = ['a'..'e']
 availableCountries = "eElLwWnNfF"
-availableNinjas = ["Naruto", "Haruki"] -- will be filled from txt
 
 -- Pattern Matching
 -- | The 'isCountryValid' function checks the user input for validation.
@@ -103,17 +105,13 @@ uiController = do
         when (action /= "e") uiLoop -- Do not break the loop until the user want to exit
     uiLoop -- Start first loop
 
+getAvailableNinjas :: [Ninja]
+getAvailableNinjas = (ninjas fire) ++ (ninjas lightning) ++ (ninjas earth)
+
 getAvailableNinjasByCountry :: Char -> [Ninja]
 getAvailableNinjasByCountry 'f' = (ninjas fire)
-getAvailableNinjasByCountry 'e' = (ninjas earth
+getAvailableNinjasByCountry 'e' = (ninjas earth)
 getAvailableNinjasByCountry 'l' = (ninjas lightning)
-
-getNinjasByCountry :: Char -> [Ninja]
-getNinjasByCountry 'f' = fire
-getNinjasByCountry 'e' = earth
-
-getNinjas :: [Ninja]
-getNinjas = fire ++ earth
 
 listNinjas :: [Ninja] -> [String]
 listNinjas = map (show)
@@ -125,21 +123,43 @@ viewNinjasByCountry :: IO()
 viewNinjasByCountry = do
     country <- inputWithText countryInputText
     if isCountryValid country
-        then do
-            let ninjas = getNinjasByCountry (toLower (country!!0))
-            displayNinjas ninjas
-
-        else
-            putStrLn invalidCountryInput
+        then displayNinjas (getAvailableNinjasByCountry (toLower (country!!0)))
+        else putStrLn invalidCountryInput
 
 viewNinjas :: IO()
-viewNinjas = do
-    let ninjas = getNinjas
-    displayNinjas ninjas
+viewNinjas = displayNinjas getAvailableNinjas
+
+-- | This function removes the loser ninja from the country list.
+-- input1: Loser ninja (will be removed)
+-- output: Return the updated ninjas of country
+removeNinjaFromCountry :: Ninja -> [Ninja]
+removeNinjaFromCountry loser = ninjas fire
+
+
+-- | This function arrange winner score, round and status from the country list.
+-- input1: Winner ninja
+-- output: Return the updated ninja
+updateWinnerNinja :: Ninja -> Ninja
+updateWinnerNinja winner = winner
+
+arrangeRoundResults :: Ninja -> Ninja -> String
+arrangeRoundResults winner loser =
+    let _ = removeNinjaFromCountry loser
+        result = showWinner (updateWinnerNinja winner)
+    in result
+
+selectRandomWinner :: Ninja -> Ninja -> (Ninja, Ninja)
+selectRandomWinner first second 
+    | randInt == 0  = (first, second)
+    | otherwise     = (second, first)
+    where randInt = 0
 
 roundBetweenNinjas :: Ninja -> Ninja -> String
 roundBetweenNinjas ninja1 ninja2 
-    | ninja1 > ninja2 = 
+    | ninja1 > ninja2   = arrangeRoundResults ninja1 ninja2
+    | ninja1 < ninja2   = arrangeRoundResults ninja2 ninja1
+    | otherwise         = arrangeRoundResults (fst randomNinjas) (snd randomNinjas)
+    where randomNinjas = selectRandomWinner ninja1 ninja2
 
 showWinner :: Ninja -> String
 showWinner n = "Winner: \"" ++ (name n) ++ ", Round: " ++ (show (r n)) ++ ", Status: " ++ (status n) ++ "\""
