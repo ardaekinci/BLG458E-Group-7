@@ -57,26 +57,26 @@ data Ninja = Ninja {
     r:: Int
     } deriving(Eq, Show)
 
-data Country = Country {
-    fire :: [Ninja],
-    lightning :: [Ninja],
-    water :: [Ninja],
-    wind :: [Ninja],
-    earth :: [Ninja]
-}
+fire :: [Ninja]
+fire = []
+lightning :: [Ninja]
+lightning = []
+water :: [Ninja]
+water = []
+wind :: [Ninja]
+wind = []
+earth :: [Ninja]
+earth = []
 
--- accessing the index ex_list[0] == ex_list!!0
--- take 1 "Example" == "E"
--- read (x) :: Float, converts string x to Float
 convertStringListToNinja :: [String] -> Ninja
-convertStringListToNinja l = Ninja {
-    name = l!!0,
-    country = toLower ((take 1 (l!!1))!!0),
+convertStringListToNinja stringList = Ninja {
+    name = stringList!!0,
+    country = toLower ((take 1 (stringList!!1))!!0),
     status = 0,
-    exam1 = read (l!!2) :: Float,
-    exam2 = read (l!!3) :: Float,
-    ability1 = l!!4,
-    ability2 = l!!5,
+    exam1 = read (stringList!!2) :: Float,
+    exam2 = read (stringList!!3) :: Float,
+    ability1 = stringList!!4,
+    ability2 = stringList!!5,
     r = 0
 }
 
@@ -97,36 +97,26 @@ convertStringListToNinja l = Ninja {
 
 -- should definetely read here
 -- https://stackoverflow.com/questions/11229854/how-can-i-parse-the-io-string-in-haskell/11230235#11230235
-readCse = do
-   content <- readFile "csereport.txt"
-   let lines_content = lines content
-   let lines_content_w = map words lines_content
-   let ninjas_list = map convertStringListToNinja lines_content_w
-   return ninjas_list
+main fileName = do
+   -- read file
+   content <- readFile fileName
+   -- split by new line and create string list for each line
+   let linesContent = map words (lines content)
+   let ninjaList = map convertStringListToNinja linesContent
+
+   let fire = returnNinjasByCountry 'f' ninjaList
+   return fire
+
+returnNinjasByCountry :: Char -> [Ninja] -> [Ninja]
+returnNinjasByCountry c ninjaList = filter (\x -> country x == c) ninjaList
 
 -- printNinja :: Ninja
-printNinja ninja = do
-    print ninja
+-- printNinja ninja = do
+--     print ninja
 
-main = do
-    print ("x")
-    print ("y")
-    -- -- reads the file into IO [Char]
-    -- content <- readFile "csereport.txt"
+-- main = do
+--     let ninjaList = readInputFile "csereport.txt"
+--     return (returnNinjasByCountry 'f' ninjaList)
 
-    -- -- parsing by '\n' and create list out of it
-    -- let content_lines = lines content
-
-    -- -- Each line should be parsed by whitespace
-    -- let content_lines = map words content_lines
-
-    -- -- All ninjas into one list
-    -- let ninjas_list = map convertStringListToNinja content_lines
-    -- x = readCse
-
-    -- print x
-    content <- readFile "csereport.txt"
-    let lines_content = lines content
-    let lines_content_w = map words lines_content
-    let ninjas_list = map convertStringListToNinja lines_content_w
-    return ninjas_list
+-- x = readInputFile "csereport.txt"
+-- ninjaList = convertStringListToNinja x
