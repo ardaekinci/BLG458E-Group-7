@@ -153,58 +153,50 @@ viewNinjas state = displayNinjas (sortNinjas (getAvailableNinjas state))
 -- | This function removes the loser ninja from the country list.
 -- input1: Loser ninja (will be removed)
 -- output: Return the updated ninjas of country
-removeNinjaFromCountry :: Ninja -> [Ninja]
-removeNinjaFromCountry loser = ninjas fire
+-- TODO: Remove ninja from the current state and return the updated state
+removeNinjaFromCountry :: [Country] -> Ninja -> [Country]
+removeNinjaFromCountry state loser = state
 
 
 -- | This function arrange winner score, round and status from the country list.
 -- input1: Winner ninja
 -- output: Return the updated ninja
-updateWinnerNinja :: Ninja -> Ninja
-updateWinnerNinja winner = winner
+-- TODO: Update the winner ninja from in the current state and return the updated state and ninja.
+updateWinnerNinja :: [Country] -> Ninja -> ([Country], Ninja)
+updateWinnerNinja state winner = state
 
-arrangeRoundResults :: Ninja -> Ninja -> String
-arrangeRoundResults winner loser =
-    let _ = removeNinjaFromCountry loser
-        result = showWinner (updateWinnerNinja winner)
-    in result
+arrangeRoundResults :: [Country] -> (Ninja, Ninja) -> ([Country], String)
+arrangeRoundResults state (winner, loser) = (state, showWinner updatedNinja)
+    where (state, updatedNinja) = updateWinnerNinja (removeNinjaFromCountry state loser) winner
 
-selectRandomWinner :: Ninja -> Ninja -> (Ninja, Ninja)
-selectRandomWinner first second 
+selectRandomWinner :: (Ninja, Ninja) -> (Ninja, Ninja)
+selectRandomWinner (first, second) 
     | randInt == 0  = (first, second)
     | otherwise     = (second, first)
     where randInt = 0
 
-roundBetweenNinjas :: Ninja -> Ninja -> String
-roundBetweenNinjas ninja1 ninja2 
-    | ninja1 > ninja2   = arrangeRoundResults ninja1 ninja2
-    | ninja1 < ninja2   = arrangeRoundResults ninja2 ninja1
-    | otherwise         = arrangeRoundResults (fst randomNinjas) (snd randomNinjas)
-    where randomNinjas = selectRandomWinner ninja1 ninja2
+roundBetweenNinjas :: [Country] -> (Ninja, Ninja) -> ([Country], String)
+roundBetweenNinjas state (ninja1, ninja2) 
+    | ninja1 > ninja2   = arrangeRoundResults state (ninja1, ninja2)
+    | ninja1 < ninja2   = arrangeRoundResults state (ninja2, ninja1)
+    | otherwise         = arrangeRoundResults state (winner, loser)
+    where (winner, loser) = selectRandomWinner (ninja1, ninja2)
 
 showWinner :: Ninja -> String
 showWinner n = "Winner: \"" ++ (name n) ++ ", Round: " ++ (show (r n)) ++ ", Status: " ++ (status n) ++ "\""
 
-findNinjaByNameAndCountry :: String -> Char -> [Ninja]
-findNinjaByNameAndCountry nameOfNinja country = filter (\x -> name x == nameOfNinja) (getAvailableNinjasByCountry country) 
+findNinjaByNameAndCountry :: [Country] -> String -> Char -> [Ninja]
+findNinjaByNameAndCountry state nameOfNinja countryCode = filter (\x -> name x == nameOfNinja) (getAvailableNinjasByCountry state countryCode) 
 
-displayRoundBetweenNinjas :: String -> String -> String -> String -> String
-displayRoundBetweenNinjas nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja
-    | not (isCountryValid countryOfFirstNinja)  = "Country of first ninja does not exist."
-    | not (isCountryValid countryOfSecondNinja) = "Country of second ninja does not exist."
-    | length firstNinja == 0                    = "First ninja that you entered not found for given country"
-    | length secondNinja == 0                   = "Second ninja that you entered not found for given country"
-    | otherwise                                 = roundBetweenNinjas (head firstNinja) (head secondNinja)
-    where firstNinja = findNinjaByNameAndCountry nameOfFirstNinja (toChar countryOfFirstNinja)
-          secondNinja = findNinjaByNameAndCountry nameOfSecondNinja (toChar countryOfSecondNinja)
-
-viewRoundNinjas :: IO()
-viewRoundNinjas = do
-    nameOfFirstNinja <- inputWithText "Enter the name of the first ninja: "
-    countryOfFirstNinja <- inputWithText "Enter the country code of the first ninja: "
-    nameOfSecondNinja <- inputWithText "Enter the name of the second ninja: "
-    countryOfSecondNinja <- inputWithText "Enter the country code of the second ninja: "
-    putStrLn (displayRoundBetweenNinjas nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja ++ "\n")
+viewRoundNinjas :: [Country] -> String -> String -> String -> String -> ([Country], String)
+viewRoundNinjas state nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja
+    | not (isCountryValid countryOfFirstNinja)  = (state, "Country of first ninja does not exist.\n")
+    | not (isCountryValid countryOfSecondNinja) = (state, "Country of second ninja does not exist.\n")
+    | length firstNinja == 0                    = (state, "First ninja that you entered not found for given country.\n")
+    | length secondNinja == 0                   = (state, "Second ninja that you entered not found for given country.\n")
+    | otherwise                                 = roundBetweenNinjas state ((head ninjasOfFirstCountry), (head ninjasOfSecondCountry))
+    where ninjasOfFirstCountry = findNinjaByNameAndCountry state nameOfFirstNinja (toChar countryOfFirstNinja)
+          ninjasOfSecondCountry = findNinjaByNameAndCountry state nameOfSecondNinja (toChar countryOfSecondNinja)
 
 displayRoundBetweenCountries :: String -> String -> String
 displayRoundBetweenCountries firstCountryCode secondCountryCode
