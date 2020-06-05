@@ -183,7 +183,7 @@ roundBetweenNinjas state (ninja1, ninja2)
     where (winner, loser) = selectRandomWinner (ninja1, ninja2)
 
 showWinner :: Ninja -> String
-showWinner n = "Winner: \"" ++ (name n) ++ ", Round: " ++ (show (r n)) ++ ", Status: " ++ (status n) ++ "\""
+showWinner n = "Winner: \"" ++ (name n) ++ ", Round: " ++ (show (r n)) ++ ", Status: " ++ (status n) ++ "\"\n"
 
 findNinjaByNameAndCountry :: [Country] -> String -> Char -> [Ninja]
 findNinjaByNameAndCountry state nameOfNinja countryCode = filter (\x -> name x == nameOfNinja) (getAvailableNinjasByCountry state countryCode) 
@@ -198,25 +198,19 @@ viewRoundNinjas state nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja cou
     where ninjasOfFirstCountry = findNinjaByNameAndCountry state nameOfFirstNinja (toChar countryOfFirstNinja)
           ninjasOfSecondCountry = findNinjaByNameAndCountry state nameOfSecondNinja (toChar countryOfSecondNinja)
 
-displayRoundBetweenCountries :: String -> String -> String
-displayRoundBetweenCountries firstCountryCode secondCountryCode
-    | not (isCountryValid firstCountryCode)  = "First country code does not exist."
-    | not (isCountryValid secondCountryCode) = "Second country code does not exist."
-    | length ninjasOne == 0                  = "There are no ninjas left to fight for first country"
-    | length ninjasTwo == 0                  = "There are no ninjas left to fight for second country"
+viewRoundCountries :: [Country] -> String -> String -> ([Country], String)
+viewRoundCountries state firstCountryCode secondCountryCode
+    | not (isCountryValid firstCountryCode)  = "First country code does not exist.\n"
+    | not (isCountryValid secondCountryCode) = "Second country code does not exist.\n"
+    | length ninjasOne == 0                  = "There are no ninjas left to fight for first country.\n"
+    | length ninjasTwo == 0                  = "There are no ninjas left to fight for second country.\n"
     | warningForFirstCountry /= ""           = warningForFirstCountry
     | warningForSecondCountry /= ""          = warningForSecondCountry
-    | otherwise                              = roundBetweenNinjas (head ninjasOne) (head ninjasTwo)
-    where ninjasOne = getAvailableNinjasByCountry (toChar firstCountryCode)
-          ninjasTwo = getAvailableNinjasByCountry (toChar secondCountryCode)
-          warningForFirstCountry = displayCountryWarning (toChar firstCountryCode)
-          warningForSecondCountry = displayCountryWarning (toChar secondCountryCode)
-
-viewRoundCountries :: IO()
-viewRoundCountries = do
-    firstCountryCode <- inputWithText "Enter the first country code: "
-    secondCountryCode <- inputWithText "Enter the second country code: "
-    putStrLn (displayRoundBetweenCountries firstCountryCode secondCountryCode ++ "\n")
+    | otherwise                              = roundBetweenNinjas state ((head ninjasOne), (head ninjasTwo))
+    where ninjasOne = getAvailableNinjasByCountry state (toChar firstCountryCode)
+          ninjasTwo = getAvailableNinjasByCountry state (toChar secondCountryCode)
+          warningForFirstCountry = displayCountryWarning state (toChar firstCountryCode)
+          warningForSecondCountry = displayCountryWarning state (toChar secondCountryCode)
 
 data Input = ViewNinjas
   | ViewNinjasByCountry String
@@ -292,5 +286,5 @@ main = do
     water :: Country
     water = Country{countryName="water", ninjas=water_ninjas,  code='w', promoted= False}
     
-    let initial_state = [fire, lightning, water, wind, earth]
-    mainLoop initial_state
+    let initialState = [fire, lightning, water, wind, earth]
+    mainLoop initialState
