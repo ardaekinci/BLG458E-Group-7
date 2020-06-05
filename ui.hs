@@ -25,9 +25,40 @@ data Ninja = Ninja {
     r:: Int
     }
 
+instance Eq Ninja where
+  x == y = (score x) == (score y)
+
+instance Ord Ninja where
+  compare a b = compare (score a) (score b)
+
 instance Show Ninja where
    show (Ninja name _ status score _ _ _ _ r) = name ++ ", Score: " ++ (show score) ++ ", Status: " ++ status ++ ", Round: " ++ (show r)
 
+ninja1 = Ninja {name="Naruto", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, score=133.5}
+ninja2 = Ninja {name="Haruki", country='e', status="Journeyman", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, score=75.7}
+ninja3 = Ninja {name="Hiroshi", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, score=150.2}
+ninja4 = Ninja {name="Sasuke", country='l', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, score=140.2}
+
+fire_ninjas = [ninja1, ninja3]
+earth_ninjas = [ninja2]
+lightning_ninjas = [ninja4]
+
+data Country = Country{countryName :: String, ninjas :: [Ninja], code :: Char, promoted :: Bool} deriving Show
+fire :: Country
+fire = Country{countryName="fire", ninjas=fire_ninjas, code='f', promoted= False}
+lightning :: Country
+lightning = Country{countryName="lightning", ninjas=lightning_ninjas, code='l', promoted= False}
+earth :: Country
+earth = Country{countryName="earth", ninjas=earth_ninjas,  code='e', promoted= True}
+
+displayCountryWarning :: Char -> String
+displayCountryWarning countryCode
+    | (promoted country) = (countryName country) ++ " country cannot be included in a fight"
+    | otherwise = ""
+    where country = (filter (\x -> code x == countryCode) getCountries)!!0
+
+getCountries :: [Country]
+getCountries = [fire, earth, lightning]
 
 uiOptions = "a) View a Country's Ninja Information \n\
             \b) View All Countries' Ninja Information \n\
@@ -47,13 +78,6 @@ isCountryValid :: String -> Bool
 isCountryValid [country] = elem country availableCountries -- Matches on exactly one item for a country with this pattern 
 isCountryValid _ = False -- Return False for other inputs
 
-ninja1 = Ninja {name="Naruto", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, score=133.5}
-ninja2 = Ninja {name="Haruki", country='e', status="Journeyman", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, score=75.7}
-ninja3 = Ninja {name="Hiroshi", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, score=150.2}
-
-fire = [ninja1, ninja3]
-earth = [ninja2]
-
 uiController :: IO()
 uiController = do
     let uiLoop = do
@@ -64,8 +88,9 @@ uiController = do
     uiLoop -- Start first loop
 
 getAvailableNinjasByCountry :: Char -> [Ninja]
-getAvailableNinjasByCountry 'f' = fire
-getAvailableNinjasByCountry 'e' = earth
+getAvailableNinjasByCountry 'f' = (ninjas fire)
+getAvailableNinjasByCountry 'e' = (ninjas earth
+getAvailableNinjasByCountry 'l' = (ninjas lightning)
 
 getNinjasByCountry :: Char -> [Ninja]
 getNinjasByCountry 'f' = fire
@@ -87,6 +112,7 @@ viewNinjasByCountry = do
         then do
             let ninjas = getNinjasByCountry (toLower (country!!0))
             displayNinjas ninjas
+
         else
             putStrLn invalidCountryInput
 
