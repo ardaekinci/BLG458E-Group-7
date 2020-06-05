@@ -22,22 +22,25 @@ data Ninja = Ninja {
     exam2:: Float, 
     ability1:: String, 
     ability2:: String, 
+    abilityScore:: Int,
     r:: Int
     }
 
 instance Eq Ninja where
-  x == y = (score x) == (score y)
+  x == y = ((score x) == (score y) && (abilityScore x) ==(abilityScore y))
 
 instance Ord Ninja where
-  compare a b = compare (score a) (score b)
+  compare a b = if (score a) == (score b) 
+      then compare (abilityScore a) (abilityScore b)
+      else compare (score a) (score b)
 
 instance Show Ninja where
-   show (Ninja name _ status score _ _ _ _ r) = name ++ ", Score: " ++ (show score) ++ ", Status: " ++ status ++ ", Round: " ++ (show r)
+   show (Ninja name _ status score _ _ _ _ _ r) = name ++ ", Score: " ++ (show score) ++ ", Status: " ++ status ++ ", Round: " ++ (show r)
 
-ninja1 = Ninja {name="Naruto", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, score=133.5}
-ninja2 = Ninja {name="Haruki", country='e', status="Journeyman", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, score=75.7}
-ninja3 = Ninja {name="Hiroshi", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, score=150.2}
-ninja4 = Ninja {name="Sasuke", country='l', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, score=140.2}
+ninja1 = Ninja {name="Naruto", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, abilityScore=140, score=133.5}
+ninja2 = Ninja {name="Haruki", country='e', status="Journeyman", exam1=40, exam2=75, ability1="Lightning", ability2="Summon", r=0, abilityScore=140, score=133.5}
+ninja3 = Ninja {name="Hiroshi", country='f', status="Junior", exam1=40, exam2=75, ability1="Water", ability2="Summon", r=0, abilityScore=90, score=150.2}
+ninja4 = Ninja {name="Sasuke", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=0, abilityScore=150, score=150.2}
 
 fire_ninjas = [ninja1, ninja3]
 earth_ninjas = [ninja2]
@@ -56,6 +59,19 @@ displayCountryWarning countryCode
     | (promoted country) = (countryName country) ++ " country cannot be included in a fight"
     | otherwise = ""
     where country = (filter (\x -> code x == countryCode) getCountries)!!0
+
+getAbilityScore :: String -> Int
+getAbilityScore "Clone" = 20
+getAbilityScore "Hit" = 10
+getAbilityScore "Lightning" = 50
+getAbilityScore "Vision" = 30
+getAbilityScore "Sand" = 50
+getAbilityScore "Fire" = 40
+getAbilityScore "Water" = 30
+getAbilityScore "Blade" = 20
+getAbilityScore "Summon" = 50
+getAbilityScore "Storm" = 10
+getAbilityScore "Rock" = 20
 
 getCountries :: [Country]
 getCountries = [fire, earth, lightning]
@@ -122,7 +138,8 @@ viewNinjas = do
     displayNinjas ninjas
 
 roundBetweenNinjas :: Ninja -> Ninja -> String
-roundBetweenNinjas ninja1 ninja2 = showWinner ninja1
+roundBetweenNinjas ninja1 ninja2 
+    | ninja1 > ninja2 = 
 
 showWinner :: Ninja -> String
 showWinner n = "Winner: \"" ++ (name n) ++ ", Round: " ++ (show (r n)) ++ ", Status: " ++ (status n) ++ "\""
