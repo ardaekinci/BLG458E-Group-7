@@ -38,7 +38,7 @@ instance Show Ninja where
    show (Ninja name _ status score _ _ _ _ _ r) = name ++ ", Score: " ++ (show score) ++ ", Status: " ++ status ++ ", Round: " ++ (show r)
 
 
-data Country = Country{countryName :: String, ninjas :: [Ninja], code :: Char, promoted :: Bool}
+data Country = Country{countryName :: String, ninjas :: [Ninja], code :: Char, promoted :: Bool} deriving (Show)
 
 displayCountryWarning :: [Country] -> Char -> String
 displayCountryWarning state countryCode
@@ -138,17 +138,33 @@ displayPromotedNinjas state = displayNinjas promotedNinjas
 viewNinjas :: [Country] -> ([Country], String)
 viewNinjas state = (state, displayNinjas (sortNinjas (getAvailableNinjas state)))
 
+-- Get the last n element from the lıst
+takeEnd :: Int -> [a] -> [a]
+takeEnd n = reverse . take n . reverse 
+
+getCountryIndex :: Char -> Int
+getCountryIndex x
+    | (x == 'f') = 0
+    | (x == 'l') = 1
+    | (x == 'w') = 2
+    | (x == 'n') = 3
+    | (x == 'e') = 4
+
 -- | This function removes the loser ninja from the country list.
 -- input1: Loser ninja (will be removed)
 -- output: Return the updated ninjas of country
--- TODO: Remove ninja from the current state and return the updated state
 removeNinjaFromCountry :: [Country] -> Ninja -> [Country]
-removeNinjaFromCountry state loser = state
+removeNinjaFromCountry state loser = do
+    let countryIndex = getCountryIndex (country loser)
+    let country = state!!countryIndex
+    let removedList = filter (\x -> name x /= name loser) (ninjas country)
+    let updatedCountry = Country{countryName=countryName country, ninjas=removedList, code=code country, promoted=promoted country}
+    let updatedCountryList = take countryIndex state ++ [updatedCountry] ++ takeEnd (4 - countryIndex) state
+    updatedCountryList
 
 -- | This function arrange winner score, round and status from the country list.
 -- input1: Winner ninja
 -- output: Return the updated ninja
--- TODO: Update the winner ninja from in the current state and return the updated state and ninja.
 updateWinnerNinja :: [Country] -> Ninja -> ([Country], Ninja)
 updateWinnerNinja state winner = (state, winner)
 
