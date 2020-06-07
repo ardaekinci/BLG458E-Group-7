@@ -153,14 +153,16 @@ getCountryIndex x
 -- | This function removes the loser ninja from the country list.
 -- input1: Loser ninja (will be removed)
 -- output: Return the updated ninjas of country
+updateNinjasOfCountry :: Country -> [Ninja] -> Country
+updateNinjasOfCountry c n = Country{countryName=countryName c, ninjas=n, code=code c, promoted=promoted c}
+
 removeNinjaFromCountry :: [Country] -> Ninja -> [Country]
-removeNinjaFromCountry state loser = do
-    let countryIndex = getCountryIndex (country loser)
-    let country = state!!countryIndex
-    let removedList = filter (\x -> name x /= name loser) (ninjas country)
-    let updatedCountry = Country{countryName=countryName country, ninjas=removedList, code=code country, promoted=promoted country}
-    let updatedCountryList = take countryIndex state ++ [updatedCountry] ++ takeEnd (4 - countryIndex) state
-    updatedCountryList
+removeNinjaFromCountry state loser = updatedState
+    where countryIndexInState = getCountryIndex (country loser)
+          loserCountry        = state!!countryIndexInState
+          remainingNinjas     = filter (\x -> name x /= name loser) (ninjas loserCountry)
+          updatedCountry      = updateNinjasOfCountry loserCountry remainingNinjas
+          updatedState        = take countryIndexInState state ++ [updatedCountry] ++ takeEnd (4 - countryIndexInState) state
 
 -- | This function arrange winner score, round and status from the country list.
 -- input1: Winner ninja
