@@ -168,7 +168,22 @@ removeNinjaFromCountry state loser = updatedState
 -- input1: Winner ninja
 -- output: Return the updated ninja
 updateWinnerNinja :: [Country] -> Ninja -> ([Country], Ninja)
-updateWinnerNinja state winner = (state, winner)
+updateWinnerNinja state winner = (updatedState, updatedWinner)
+    where countryIndex = getCountryIndex (country winner)
+          fromCountry  = state!!countryIndex
+          exceptWinner = filter (\x -> name x /= name winner) (ninjas fromCountry)
+          -- update the status
+          updatedRound = (r winner) + 1
+          updatedStatus = if updatedRound == 3 then "Journeyman" else "Junior"
+          updatedPromotedStatus = if updatedRound == 3 then True else False
+          -- update the winner and state
+          updatedWinner = Ninja {name=name winner, country=country winner, status=updatedStatus, 
+                                 exam1=exam1 winner, exam2=exam2 winner, ability1=ability1 winner, 
+                                 ability2=ability2 winner, r=updatedRound, abilityScore=abilityScore winner, score=(score winner + 10.0)}
+          includingWinner = exceptWinner ++ [updatedWinner]
+          updatedCountry = Country{countryName=countryName fromCountry, ninjas=includingWinner, code=code fromCountry, promoted=updatedPromotedStatus}
+          updatedState = take countryIndex state ++ [updatedCountry] ++ takeEnd (4 - countryIndex) state
+    
 
 arrangeRoundResults :: [Country] -> (Ninja, Ninja) -> ([Country], String)
 arrangeRoundResults state (winner, loser) = (updatedState, showWinner updatedNinja)
