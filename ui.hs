@@ -123,6 +123,45 @@ displayNinjas = unlines . listNinjas
 displayOptions :: IO()
 displayOptions = putStr uiOptions
 
+-- | Creates output for winner ninja
+showWinner :: Ninja     -- Input1: Winner ninja
+              -> String -- Output: String. (E.g. Winner: "Sasuke, Round: 1, Status: Junior")
+showWinner n = "Winner: \"" ++ (name n) ++ ", Round: " ++ (show (r n)) ++ ", Status: " ++ (status n) ++ "\"\n"
+
+
+{-
+    Ninja Controller Functions
+    These functions are used to control of ninjas.
+-}
+-- | Get all available ninjas
+getAvailableNinjas :: [Country]     -- Input1: Current state of the program. Contains all country
+                       -> [Ninja]   -- Output: Ninja list
+getAvailableNinjas state = allNinjas
+    where allNinjas = ninjas (state!!fireIndex) ++ ninjas (state!!lightningIndex) ++ ninjas (state!!waterIndex) ++ ninjas (state!!earthIndex) ++ ninjas (state!!windIndex)
+
+-- | Get available ninjas by country
+getAvailableNinjasByCountry :: [Country]    -- Input1: Current state of the program. Contains all country
+                                -> Char     -- Input2: Country code
+                                -> [Ninja]  -- Output: Ninja list
+getAvailableNinjasByCountry state 'f' = ninjas (state!!fireIndex)
+getAvailableNinjasByCountry state 'l' = ninjas (state!!lightningIndex)
+getAvailableNinjasByCountry state 'w' = ninjas (state!!waterIndex)
+getAvailableNinjasByCountry state 'e' = ninjas (state!!earthIndex)
+getAvailableNinjasByCountry state 'n' = ninjas (state!!windIndex)
+
+-- | Update ninjas of country
+updateNinjasOfCountry :: Country        -- input1: Country object
+                         -> [Ninja]     -- input2: Ninja List
+                         -> Country     -- output: Updated country object
+updateNinjasOfCountry c n = Country{countryName=countryName c, ninjas=n, code=code c, promoted=promoted c}
+
+-- | find given ninja by using name and country
+findNinjaByNameAndCountry :: [Country]  -- input1: Current state of the program. Contains all country
+                             -> String  -- input2: Name of ninja
+                             -> Char    -- input3: Country code of ninja
+                             -> [Ninja] -- output: Founded ninjas
+findNinjaByNameAndCountry state nameOfNinja countryCode = filter (\x -> name x == nameOfNinja) (getAvailableNinjasByCountry state countryCode) 
+
 getTotalAbilityScore :: String -> String -> Int
 getTotalAbilityScore a1 a2 = (getAbilityImpact a1) + (getAbilityImpact a2)
 
@@ -145,17 +184,6 @@ getAbilityImpact "Rock" = 20
 isCountryValid :: String -> Bool 
 isCountryValid [country] = elem country availableCountries -- Matches on exactly one item for a country with this pattern 
 isCountryValid _ = False -- Return False for other inputs
-
-getAvailableNinjas :: [Country] -> [Ninja]
-getAvailableNinjas state = allNinjas
-    where allNinjas = ninjas (state!!fireIndex) ++ ninjas (state!!lightningIndex) ++ ninjas (state!!waterIndex) ++ ninjas (state!!earthIndex) ++ ninjas (state!!windIndex)
-
-getAvailableNinjasByCountry :: [Country] -> Char -> [Ninja]
-getAvailableNinjasByCountry state 'f' = ninjas (state!!fireIndex)
-getAvailableNinjasByCountry state 'l' = ninjas (state!!lightningIndex)
-getAvailableNinjasByCountry state 'w' = ninjas (state!!waterIndex)
-getAvailableNinjasByCountry state 'e' = ninjas (state!!earthIndex)
-getAvailableNinjasByCountry state 'n' = ninjas (state!!windIndex)
 
 smallerOrEqualNinja :: Ninja -> Ninja -> Bool
 smallerOrEqualNinja n1 n2 
@@ -196,11 +224,6 @@ getCountryIndex x
     | (x == 'n') = 3
     | (x == 'e') = 4
 
--- | This function removes the loser ninja from the country list.
--- input1: Loser ninja (will be removed)
--- output: Return the updated ninjas of country
-updateNinjasOfCountry :: Country -> [Ninja] -> Country
-updateNinjasOfCountry c n = Country{countryName=countryName c, ninjas=n, code=code c, promoted=promoted c}
 
 removeNinjaFromCountry :: [Country] -> Ninja -> [Country]
 removeNinjaFromCountry state loser = updatedState
@@ -248,11 +271,6 @@ roundBetweenNinjas state (ninja1, ninja2)
     | otherwise         = arrangeRoundResults state (winner, loser)
     where (winner, loser) = selectRandomWinner (ninja1, ninja2)
 
-showWinner :: Ninja -> String
-showWinner n = "Winner: \"" ++ (name n) ++ ", Round: " ++ (show (r n)) ++ ", Status: " ++ (status n) ++ "\"\n"
-
-findNinjaByNameAndCountry :: [Country] -> String -> Char -> [Ninja]
-findNinjaByNameAndCountry state nameOfNinja countryCode = filter (\x -> name x == nameOfNinja) (getAvailableNinjasByCountry state countryCode) 
 
 viewRoundNinjas :: [Country] -> String -> String -> String -> String -> ([Country], String)
 viewRoundNinjas state nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja
