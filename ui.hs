@@ -250,24 +250,6 @@ convertStringListToNinja stringList = Ninja {
 returnNinjasByCountry :: Char -> [Ninja] -> [Ninja]
 returnNinjasByCountry c ninjaList = filter (\x -> country x == c) ninjaList
 
--- TODO: find a short way to creating new data
-readCseReport :: String -> [Country]
-readCseReport fileName = do
-    let content = readFile fileName
-    -- split by new line and create string list for each line
-    let linesContent = map words (lines content)
-    let ninjaList = map convertStringListToNinja linesContent
-
-    let fire = Country{countryName = "fire", ninjas = returnNinjasByCountry 'f' ninjaList, code = 'f', promoted = False}
-    let lightning = Country{countryName="lightning", ninjas=returnNinjasByCountry 'l' ninjaList, code='l', promoted= False}
-    let earth = Country{countryName="earth", ninjas=returnNinjasByCountry 'e' ninjaList,  code='e', promoted= False}
-    let wind = Country{countryName="wind", ninjas=returnNinjasByCountry 'n' ninjaList,  code='n', promoted= False}    
-    let water = Country{countryName="water", ninjas=returnNinjasByCountry 'w' ninjaList,  code='w', promoted= False}
-
-    let initialState = [fire, lightning, water, wind, earth]
-    :rinitialState
-
-
 data Input = ViewNinjas
   | ViewNinjasByCountry String
   | RoundNinja String String String String
@@ -343,6 +325,18 @@ main = do
     -- let water = Country{countryName="water", ninjas=water_ninjas,  code='w', promoted= False}
     
     -- let initialState = [fire, lightning, water, wind, earth]
+    content <- readFile "csereport.txt"
+    -- split by new line and create string list for each line
+    let linesContent = map words (lines content)
+    let ninjaList = map convertStringListToNinja linesContent
 
-    initialState <- readCseReport "csereport.txt"
+    let fire = Country{countryName = "fire", ninjas = returnNinjasByCountry 'f' ninjaList, code = 'f', promoted = False}
+    let lightning = Country{countryName="lightning", ninjas=returnNinjasByCountry 'l' ninjaList, code='l', promoted= False}
+    let earth = Country{countryName="earth", ninjas=returnNinjasByCountry 'e' ninjaList,  code='e', promoted= False}
+    let wind = Country{countryName="wind", ninjas=returnNinjasByCountry 'n' ninjaList,  code='n', promoted= False}    
+    let water = Country{countryName="water", ninjas=returnNinjasByCountry 'w' ninjaList,  code='w', promoted= False}
+
+    let initialState = [fire, lightning, water, wind, earth]
+
+    -- let initialState = readCseReport "csereport.txt"
     mainLoop initialState
