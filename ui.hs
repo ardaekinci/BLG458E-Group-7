@@ -150,17 +150,80 @@ getAvailableNinjasByCountry state 'e' = ninjas (state!!earthIndex)
 getAvailableNinjasByCountry state 'n' = ninjas (state!!windIndex)
 
 -- | Update ninjas of country
-updateNinjasOfCountry :: Country        -- input1: Country object
-                         -> [Ninja]     -- input2: Ninja List
+updateNinjasOfCountry :: Country        -- Input1: Country object
+                         -> [Ninja]     -- Input2: Ninja List
                          -> Country     -- output: Updated country object
 updateNinjasOfCountry c n = Country{countryName=countryName c, ninjas=n, code=code c, promoted=promoted c}
 
 -- | find given ninja by using name and country
-findNinjaByNameAndCountry :: [Country]  -- input1: Current state of the program. Contains all country
-                             -> String  -- input2: Name of ninja
-                             -> Char    -- input3: Country code of ninja
+findNinjaByNameAndCountry :: [Country]  -- Input1: Current state of the program. Contains all country
+                             -> String  -- Input2: Name of ninja
+                             -> Char    -- Input3: Country code of ninja
                              -> [Ninja] -- output: Founded ninjas
 findNinjaByNameAndCountry state nameOfNinja countryCode = filter (\x -> name x == nameOfNinja) (getAvailableNinjasByCountry state countryCode) 
+
+-- | Remove loser ninja from country list
+removeNinjaFromCountry ::   [Country]       -- Input1: Current state of the program. Contains all country
+                            -> Ninja        -- Input2: Loser ninja
+                            -> [Country]    -- output: New state of the program.
+removeNinjaFromCountry state loser = updatedState
+    where countryIndexInState = getCountryIndex (country loser) -- Get country index of loser ninja in the current state
+          loserCountry        = state!!countryIndexInState      -- Get country of loser ninja
+          remainingNinjas     = filter (\x -> name x /= name loser) (ninjas loserCountry) -- Remove loser ninja from country
+          updatedCountry      = updateNinjasOfCountry loserCountry remainingNinjas -- Updated ninjas of country without loser ninja
+          updatedState        = take countryIndexInState state ++ [updatedCountry] ++ takeEnd (4 - countryIndexInState) state -- Update country in the state
+
+-- | This function arrange winner score, round and status from the country list.
+updateWinnerNinja :: [Country]                  -- Input1: Current state of the program. Contains all country
+                      -> Ninja                  -- Input2: Winner ninja
+                      -> ([Country], Ninja)     -- Output(Tuple): Returns the new state and winner ninja as updated.
+updateWinnerNinja state winner = (updatedState, updatedWinner)
+    where countryIndex = getCountryIndex (country winner)   -- find country index of winner ninja
+          fromCountry  = state!!countryIndex                -- find country of winner ninja
+          exceptWinner = filter (\x -> name x /= name winner) (ninjas fromCountry)  -- remove updated ninja from ninjas
+          -- update the status
+          updatedRound = (r winner) + 1
+          updatedStatus = if updatedRound == 3 then "Journeyman" else "Junior"
+          updatedPromotedStatus = if updatedRound == 3 then True else False
+          -- update the winner and state
+          updatedWinner = Ninja {name=name winner, country=country winner, status=updatedStatus, 
+                                 exam1=exam1 winner, exam2=exam2 winner, ability1=ability1 winner, 
+                                 ability2=ability2 winner, r=updatedRound, abilityScore=abilityScore winner, score=(score winner + 10.0)}
+          includingWinner = exceptWinner ++ [updatedWinner] -- Concatenate updated and current ninjas
+          -- Update state and country
+          updatedCountry = Country{countryName=countryName fromCountry, ninjas=includingWinner, code=code fromCountry, promoted=updatedPromotedStatus}
+          updatedState = take countryIndex state ++ [updatedCountry] ++ takeEnd (4 - countryIndex) state
+
+{-
+    Ninjas Ranking Functions
+    These functions are used to rank ninjas according to CSE rules.
+-}
+-- | Checks if ninja smaller or equal to other ninja according to CSE rules.
+smallerOrEqualNinja :: Ninja    -- Input1: First ninja
+                       -> Ninja -- Input2: Second ninja
+                       -> Bool  -- Output: Comparison result of ninjas
+smallerOrEqualNinja n1 n2 
+    | (r n1) < (r n2) = True
+    | (r n1) == (r n2) && (score n1) >= (score n2) = True
+    | otherwise = False
+
+-- | Checks if ninja has high rank against to other ninja.
+biggerNinja ::  Ninja       -- Input1: First ninja
+                -> Ninja    -- Input2: Second ninja
+                -> Bool     -- Output: Comparison result of ninjas
+biggerNinja n1 n2 
+    | (r n1) > (r n2) = True
+    | (r n1) == (r n2) && (score n1) < (score n2) = True
+    | otherwise = False
+
+-- | Sort ninjas according to ranks.
+sortNinjas :: [Ninja]       -- Input1: Unsorted ninja list
+               -> [Ninja]   -- Output: Sorted ninja list
+sortNinjas []     = []  
+sortNinjas (x:xs) = sortNinjas smaller ++ [x] ++ sortNinjas larger
+  where
+    smaller = [a | a <- xs, smallerOrEqualNinja a x]
+    larger  = [a | a <- xs, biggerNinja a x]
 
 getTotalAbilityScore :: String -> String -> Int
 getTotalAbilityScore a1 a2 = (getAbilityImpact a1) + (getAbilityImpact a2)
@@ -185,25 +248,6 @@ isCountryValid :: String -> Bool
 isCountryValid [country] = elem country availableCountries -- Matches on exactly one item for a country with this pattern 
 isCountryValid _ = False -- Return False for other inputs
 
-smallerOrEqualNinja :: Ninja -> Ninja -> Bool
-smallerOrEqualNinja n1 n2 
-    | (r n1) < (r n2) = True
-    | (r n1) == (r n2) && (score n1) >= (score n2) = True
-    | otherwise = False
-
-biggerNinja ::  Ninja -> Ninja -> Bool
-biggerNinja n1 n2 
-    | (r n1) > (r n2) = True
-    | (r n1) == (r n2) && (score n1) < (score n2) = True
-    | otherwise = False
-
-sortNinjas :: [Ninja] -> [Ninja]
-sortNinjas []     = []
-sortNinjas (x:xs) = sortNinjas smaller ++ [x] ++ sortNinjas larger
-  where
-    smaller = [a | a <- xs, smallerOrEqualNinja a x]
-    larger  = [a | a <- xs, biggerNinja a x]
-
 viewNinjasByCountry :: [Country] -> String -> ([Country], String) 
 viewNinjasByCountry state countryCode
     | not (isCountryValid countryCode) = (state, invalidCountryInput)
@@ -225,33 +269,6 @@ getCountryIndex x
     | (x == 'e') = 4
 
 
-removeNinjaFromCountry :: [Country] -> Ninja -> [Country]
-removeNinjaFromCountry state loser = updatedState
-    where countryIndexInState = getCountryIndex (country loser)
-          loserCountry        = state!!countryIndexInState
-          remainingNinjas     = filter (\x -> name x /= name loser) (ninjas loserCountry)
-          updatedCountry      = updateNinjasOfCountry loserCountry remainingNinjas
-          updatedState        = take countryIndexInState state ++ [updatedCountry] ++ takeEnd (4 - countryIndexInState) state
-
--- | This function arrange winner score, round and status from the country list.
--- input1: Winner ninja
--- output: Return the updated ninja
-updateWinnerNinja :: [Country] -> Ninja -> ([Country], Ninja)
-updateWinnerNinja state winner = (updatedState, updatedWinner)
-    where countryIndex = getCountryIndex (country winner)
-          fromCountry  = state!!countryIndex
-          exceptWinner = filter (\x -> name x /= name winner) (ninjas fromCountry)
-          -- update the status
-          updatedRound = (r winner) + 1
-          updatedStatus = if updatedRound == 3 then "Journeyman" else "Junior"
-          updatedPromotedStatus = if updatedRound == 3 then True else False
-          -- update the winner and state
-          updatedWinner = Ninja {name=name winner, country=country winner, status=updatedStatus, 
-                                 exam1=exam1 winner, exam2=exam2 winner, ability1=ability1 winner, 
-                                 ability2=ability2 winner, r=updatedRound, abilityScore=abilityScore winner, score=(score winner + 10.0)}
-          includingWinner = exceptWinner ++ [updatedWinner]
-          updatedCountry = Country{countryName=countryName fromCountry, ninjas=includingWinner, code=code fromCountry, promoted=updatedPromotedStatus}
-          updatedState = take countryIndex state ++ [updatedCountry] ++ takeEnd (4 - countryIndex) state
     
 
 arrangeRoundResults :: [Country] -> (Ninja, Ninja) -> ([Country], String)
