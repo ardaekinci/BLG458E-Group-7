@@ -2,6 +2,30 @@ import Data.Char -- Used for toLower
 import System.IO -- Flush buffer befor taking input from user
 
 {-
+    Constants
+    These variables used in the project. 
+    Defined as constants.
+-}
+-- Available Actions
+uiOptions = "---------------- Options ----------------\n\
+            \a) View a Country's Ninja Information \n\
+            \b) View All Countries' Ninja Information \n\
+            \c) Make a Round Between Ninjas \n\
+            \d) Make a Round Between Countries \n\
+            \e) Exit \n"
+availableActions = ['a'..'e']
+availableCountries = "eElLwWnNfF"            
+-- Input and Error texts            
+countryInputText = "Enter the country code: "
+invalidCountryInput = "Invalid Country entered"
+-- Indexes of Countries in The State
+fireIndex = 0
+lightningIndex = 1
+waterIndex = 2
+windIndex = 3
+earthIndex = 4
+
+{-
     Utils
     These functions are not the main part of the project.
     Used for some basic repeated operations.
@@ -114,22 +138,6 @@ getAbilityImpact "Blade" = 20
 getAbilityImpact "Summon" = 50
 getAbilityImpact "Storm" = 10
 getAbilityImpact "Rock" = 20
-
-uiOptions = "---------------- Options ----------------\n\
-            \a) View a Country's Ninja Information \n\
-            \b) View All Countries' Ninja Information \n\
-            \c) Make a Round Between Ninjas \n\
-            \d) Make a Round Between Countries \n\
-            \e) Exit \n"
-countryInputText = "Enter the country code: "
-invalidCountryInput = "Invalid Country entered"
-availableActions = ['a'..'e']
-availableCountries = "eElLwWnNfF"
-fireIndex = 0
-lightningIndex = 1
-waterIndex = 2
-windIndex = 3
-earthIndex = 4
 
 -- Pattern Matching
 -- | The 'isCountryValid' function checks the user input for validation.
