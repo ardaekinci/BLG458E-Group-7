@@ -1,6 +1,6 @@
-import Control.Monad -- Used for Conditional execution `when for ui controller`
 import Data.Char -- Used for toLower
 import System.IO -- Flush buffer befor taking input from user
+
 
 -- | The helper method to get input from user with text
 inputWithText :: String -> IO String
