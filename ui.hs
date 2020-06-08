@@ -20,6 +20,9 @@ toChar  :: String   -- Takes String as input
 toChar [chr] = toLower chr
 toChar _     = error "Wrong Input Supplied. Input Length must be exactly 1"
 
+-- Get the last n element from the lıst
+takeEnd :: Int -> [a] -> [a]
+takeEnd n = reverse . take n . reverse 
 
 {-
     Data Types
@@ -62,11 +65,39 @@ data Country = Country{
     promoted :: Bool        -- Promoted flag for country (Journeyman)
     }
 
-displayCountryWarning :: [Country] -> Char -> String
+{-
+    Output functions
+    These functions used to create output string for the program.
+-}
+
+-- | This function create warning message for country if the country has promoted ninja already
+displayCountryWarning :: [Country]  -- Input1: Current state of the program. Contains all country
+                         -> Char    -- Input2: Country code
+                         -> String  -- Output: Generated warning message
 displayCountryWarning state countryCode
     | (promoted country) = (countryName country) ++ " country cannot be included in a fight"
     | otherwise = ""
-    where country = (filter (\x -> code x == countryCode) state)!!0
+    where country = (filter (\x -> code x == countryCode) state)!!0 -- Get country by code from the current state
+
+-- | This function display promoted ninjas
+displayPromotedNinjas :: [Country]  -- Input1: Current state of the program. Contains all country
+                         -> String  -- Output: Promoted ninjas
+displayPromotedNinjas state = displayNinjas promotedNinjas
+    where promotedNinjas = filter (\x -> status x == "Journeyman") (getAvailableNinjas state)
+
+-- | Create string list from ninja list
+listNinjas :: [Ninja]       -- Input1: Ninja list
+               -> [String]  -- Output: Generated string for each ninja as list
+listNinjas = map (show)
+
+-- | Create output string from ninja list 
+displayNinjas :: [Ninja]    --Input1: Ninja list
+                 -> String  --Output: Output string to display to user.
+displayNinjas = unlines . listNinjas
+
+-- | Display available options to user
+displayOptions :: IO()
+displayOptions = putStr uiOptions
 
 getTotalAbilityScore :: String -> String -> Int
 getTotalAbilityScore a1 a2 = (getAbilityImpact a1) + (getAbilityImpact a2)
@@ -99,9 +130,6 @@ lightningIndex = 1
 waterIndex = 2
 windIndex = 3
 earthIndex = 4
-
-displayOptions :: IO()
-displayOptions = putStr uiOptions
 
 -- Pattern Matching
 -- | The 'isCountryValid' function checks the user input for validation.
@@ -140,12 +168,6 @@ sortNinjas (x:xs) = sortNinjas smaller ++ [x] ++ sortNinjas larger
     smaller = [a | a <- xs, smallerOrEqualNinja a x]
     larger  = [a | a <- xs, biggerNinja a x]
 
-listNinjas :: [Ninja] -> [String]
-listNinjas = map (show)
-
-displayNinjas :: [Ninja] -> String
-displayNinjas = unlines . listNinjas
-
 viewNinjasByCountry :: [Country] -> String -> ([Country], String) 
 viewNinjasByCountry state countryCode
     | not (isCountryValid countryCode) = (state, invalidCountryInput)
@@ -153,16 +175,10 @@ viewNinjasByCountry state countryCode
     where output = displayNinjas (sortNinjas (getAvailableNinjasByCountry state (toChar countryCode)))
           warning = displayCountryWarning state (toChar countryCode)
 
-displayPromotedNinjas :: [Country] -> String
-displayPromotedNinjas state = displayNinjas promotedNinjas
-    where promotedNinjas = filter (\x -> status x == "Journeyman") (getAvailableNinjas state)
 
 viewNinjas :: [Country] -> ([Country], String)
 viewNinjas state = (state, displayNinjas (sortNinjas (getAvailableNinjas state)))
 
--- Get the last n element from the lıst
-takeEnd :: Int -> [a] -> [a]
-takeEnd n = reverse . take n . reverse 
 
 getCountryIndex :: Char -> Int
 getCountryIndex x
