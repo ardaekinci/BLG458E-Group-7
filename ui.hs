@@ -246,6 +246,16 @@ convertStringListToNinja stringList = Ninja {
     r = 0
 }
 
+constructInitialState :: [Ninja] -> [Country]
+constructInitialState allNinjas = initialState
+    where fire         = Country{countryName = "fire", ninjas = returnNinjasByCountry 'f' allNinjas, code = 'f', promoted = False}
+          lightning    = Country{countryName = "lightning", ninjas=returnNinjasByCountry 'l' allNinjas, code='l', promoted = False}
+          earth        = Country{countryName = "earth", ninjas=returnNinjasByCountry 'e' allNinjas,  code='e', promoted = False}
+          wind         = Country{countryName = "wind", ninjas=returnNinjasByCountry 'n' allNinjas,  code='n', promoted = False}    
+          water        = Country{countryName = "water", ninjas=returnNinjasByCountry 'w' allNinjas,  code='w', promoted = False}
+          initialState = [fire, lightning, water, wind, earth]
+
+
 -- TODO: refactor here, probably duplicated or can be simplified
 returnNinjasByCountry :: Char -> [Ninja] -> [Ninja]
 returnNinjasByCountry c ninjaList = filter (\x -> country x == c) ninjaList
@@ -305,17 +315,8 @@ mainLoop currentState = do
 main = do  
     -- Read from file and init variables
     content <- readFile "csereport.txt"
-    -- split by new line and create string list for each line
-    let linesContent = map words (lines content)
-    let ninjaList = map convertStringListToNinja linesContent
-
-    let fire = Country{countryName = "fire", ninjas = returnNinjasByCountry 'f' ninjaList, code = 'f', promoted = False}
-    let lightning = Country{countryName="lightning", ninjas=returnNinjasByCountry 'l' ninjaList, code='l', promoted= False}
-    let earth = Country{countryName="earth", ninjas=returnNinjasByCountry 'e' ninjaList,  code='e', promoted= False}
-    let wind = Country{countryName="wind", ninjas=returnNinjasByCountry 'n' ninjaList,  code='n', promoted= False}    
-    let water = Country{countryName="water", ninjas=returnNinjasByCountry 'w' ninjaList,  code='w', promoted= False}
-
-    let initialState = [fire, lightning, water, wind, earth]
-
-    -- let initialState = readCseReport "csereport.txt"
+    -- split content by newlines and whitespaces, convert it to ninjas data
+    let allNinjas = map convertStringListToNinja (map words (lines content))
+    -- construct initial state list from ninja list
+    let initialState = constructInitialState allNinjas
     mainLoop initialState
