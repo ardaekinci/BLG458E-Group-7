@@ -1,44 +1,66 @@
 import Data.Char -- Used for toLower
 import System.IO -- Flush buffer befor taking input from user
 
-
--- | The helper method to get input from user with text
-inputWithText :: String -> IO String
+{-
+    Utils
+    These functions are not the main part of the project.
+    Used for some basic repeated operations.
+-}
+-- | This function gets input from user with text
+inputWithText   :: String       -- Input string to show to user. 
+                -> IO String    -- Return user input.
 inputWithText text = do
     putStr text
     hFlush stdout
     getLine
 
-toChar :: String -> Char
+-- | The `toChar` function converts 1 char string to char.
+toChar  :: String   -- Takes String as input
+        -> Char     -- Return Char 
 toChar [chr] = toLower chr
 toChar _     = error "Wrong Input Supplied. Input Length must be exactly 1"
 
+
+{-
+    Data Types
+    Data types that used in the project.
+-}
+-- Used to store each ninja information
 data Ninja = Ninja {
-    name:: String, 
-    country:: Char, 
-    status:: String, 
-    score:: Float,
-    exam1:: Float, 
-    exam2:: Float, 
-    ability1:: String, 
-    ability2:: String, 
-    abilityScore:: Int,
-    r:: Int
+    name:: String,      -- Name of the ninja
+    country:: Char,     -- Country code of ninja
+    status:: String,    -- Status of ninja (Journeyman, Junior)
+    score:: Float,      -- Total score of ninja (exam1 * 0.5 + exam2 * 0.3 + abilityScoreOne + abilityScoreTwo)
+    exam1:: Float,      -- Exam one score
+    exam2:: Float,      -- Exam two score
+    ability1:: String,  -- Name of first ability
+    ability2:: String,  -- Name of second ability
+    abilityScore:: Int, -- Total ability score of the ninja
+    r:: Int             -- Rounds played
     }
 
+-- | Equality of ninjas (Ninja1 == Ninja2). Score and AbilityScore must be equal.
 instance Eq Ninja where
   x == y = ((score x) == (score y) && (abilityScore x) ==(abilityScore y))
 
+-- | Comparison of ninjas (Ninja1> Ninja2). If scores are equal compare abilityScores, else compare scores. 
 instance Ord Ninja where
   compare a b = if (score a) == (score b) 
       then compare (abilityScore a) (abilityScore b)
       else compare (score a) (score b)
 
+-- | Display ninja. (E.g. "Naruto, Score: 103.5, Status: Junior, Round: 0")
 instance Show Ninja where
    show (Ninja name _ status score _ _ _ _ _ r) = name ++ ", Score: " ++ (show score) ++ ", Status: " ++ status ++ ", Round: " ++ (show r)
 
 
-data Country = Country{countryName :: String, ninjas :: [Ninja], code :: Char, promoted :: Bool} deriving (Show)
+-- Used to store information of each country.
+data Country = Country{
+    countryName :: String,  -- Name of country
+    ninjas :: [Ninja],      -- Ninja list of country
+    code :: Char,           -- Country code
+    promoted :: Bool        -- Promoted flag for country (Journeyman)
+    }
 
 displayCountryWarning :: [Country] -> Char -> String
 displayCountryWarning state countryCode
