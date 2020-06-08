@@ -304,27 +304,6 @@ mainLoop currentState = do
 
 main = do  
     -- Read from file and init variables
-    -- let ninja1 = Ninja {name="Naruto", country='f', status="Junior", exam1=40, exam2=75, ability1="Clone", ability2="Summon", r=0, abilityScore=140, score=133.5}
-    -- let ninja2 = Ninja {name="Haruki", country='e', status="Journeyman", exam1=40, exam2=75, ability1="Lightning", ability2="Summon", r=0, abilityScore=140, score=133.5}
-    -- let ninja3 = Ninja {name="Hiroshi", country='f', status="Junior", exam1=40, exam2=75, ability1="Water", ability2="Summon", r=0, abilityScore=90, score=150.2}
-    -- let ninja4 = Ninja {name="Sasuke", country='l', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=150.2}
-    -- let ninja5 = Ninja {name="five", country='w', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
-    -- let ninja6 = Ninja {name="six", country='w', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=1, abilityScore=150, score=140.2}
-    -- let ninja7 = Ninja {name="seven", country='n', status="Junior", exam1=40, exam2=75, ability1="Fire", ability2="Summon", r=2, abilityScore=150, score=130.2}
-    
-    -- let fire_ninjas = [ninja1, ninja3]
-    -- let earth_ninjas = [ninja2]
-    -- let lightning_ninjas = [ninja4]
-    -- let water_ninjas = [ninja5, ninja6]
-    -- let wind_ninjas = [ninja7]
-
-    -- let fire = Country{countryName="fire", ninjas=fire_ninjas, code='f', promoted= False}
-    -- let lightning = Country{countryName="lightning", ninjas=lightning_ninjas, code='l', promoted= False}
-    -- let earth = Country{countryName="earth", ninjas=earth_ninjas,  code='e', promoted= False}
-    -- let wind = Country{countryName="wind", ninjas=wind_ninjas,  code='n', promoted= False}    
-    -- let water = Country{countryName="water", ninjas=water_ninjas,  code='w', promoted= False}
-    
-    -- let initialState = [fire, lightning, water, wind, earth]
     content <- readFile "csereport.txt"
     -- split by new line and create string list for each line
     let linesContent = map words (lines content)
