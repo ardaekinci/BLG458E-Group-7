@@ -234,17 +234,23 @@ viewRoundCountries state firstCountryCode secondCountryCode
 
 convertStringListToNinja :: [String] -> Ninja
 convertStringListToNinja stringList = Ninja {
-    name = stringList!!0,
-    country = toLower ((take 1 (stringList!!1))!!0),
-    status = "Junior",
-    score = 0,
-    exam1 = read (stringList!!2) :: Float,
-    exam2 = read (stringList!!3) :: Float,
-    ability1 = stringList!!4,
-    ability2 = stringList!!5,
-    abilityScore = (getAbilityImpact (stringList!!4)) + (getAbilityImpact (stringList!!5)),
-    r = 0
-}
+        name = stringList!!0,
+        country = toLower ((take 1 (stringList!!1))!!0),
+        status = "Junior",
+        score = 0.5 * exam1 + 0.3 * exam2 + fromIntegral abilityOneScore + fromIntegral abilityTwoScore,
+        exam1 = exam1,
+        exam2 = exam2,
+        ability1 = ability1,
+        ability2 = ability2,
+        abilityScore = abilityOneScore + abilityTwoScore,
+        r = 0
+    }
+    where   exam1 = read (stringList!!2) :: Float
+            exam2 = read (stringList!!3) :: Float
+            ability1 = stringList!!4
+            ability2 = stringList!!5
+            abilityOneScore = getAbilityImpact ability1
+            abilityTwoScore = getAbilityImpact ability2
 
 constructInitialState :: [Ninja] -> [Country]
 constructInitialState allNinjas = initialState
