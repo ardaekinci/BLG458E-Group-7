@@ -16,7 +16,6 @@ uiOptions = "---------------- Options ----------------\n\
 availableActions = ['a'..'e']
 availableCountries = "eElLwWnNfF"            
 -- Input and Error texts            
-countryInputText = "Enter the country code: "
 invalidCountryInput = "Invalid Country entered"
 -- Indexes of Countries in The State
 fireIndex = 0
