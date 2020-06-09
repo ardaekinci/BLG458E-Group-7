@@ -485,8 +485,9 @@ main = do
     These project includes at least 3 higher order functions.
     By definition, a function can take functions as parameters and return functions as return values is called a higher order function.
 
+    Function composition: Please take a look at the function "takeEnd".
     Curried functions: Every function in the project is an example for curried function.
     Map: Apllies function to each element in the list and return a new list.
     Filter: Takes a predicate and return a list of items who satisfy the predicate.
-    Lambda: A function is needed only once. Used when filtering as a predicate. Example: (\x -> name x == name ninja)
+    Lambda: A function is needed only once. Used when filtering as a predicate. Example: (\x -> name x == name )
 -}
