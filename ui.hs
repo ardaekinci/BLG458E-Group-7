@@ -89,6 +89,15 @@ data Country = Country{
     promoted :: Bool        -- Promoted flag for country (Journeyman)
     }
 
+-- Used to take input from user
+data Input = ViewNinjas
+  | ViewNinjasByCountry String
+  | RoundNinja String String String String
+  | RoundCountry String String
+  | Exit
+  | Invalid
+
+
 {-
     Output functions
     These functions used to create output string for the program.
@@ -133,6 +142,12 @@ showWinner n = "Winner: \"" ++ (name n) ++ ", Round: " ++ (show (r n)) ++ ", Sta
     Ninja Controller Functions
     These functions are used to control of ninjas.
 -}
+-- | Return ninjas by country using all ninjas
+returnNinjasByCountry :: Char           -- Input1: Country code
+                         -> [Ninja]     -- Input2: All ninjas
+                         -> [Ninja]     -- Output: Filtered ninja list
+returnNinjasByCountry c ninjaList = filter (\x -> country x == c) ninjaList
+
 -- | Get all available ninjas
 getAvailableNinjas :: [Country]     -- Input1: Current state of the program. Contains all country
                        -> [Ninja]   -- Output: Ninja list
@@ -295,20 +310,34 @@ getCountryIndex 'w' = waterIndex
 getCountryIndex 'n' = windIndex
 getCountryIndex 'e' = earthIndex
 
-viewNinjasByCountry :: [Country] -> String -> ([Country], String) 
+{-
+    View Functions.
+    These functions used to hande user actions.
+-}
+-- | Shows sorted ninjas by country 
+viewNinjasByCountry :: [Country]                -- Input1: Current state of the program. Contains all country
+                        -> String               -- Input2: Country code
+                        -> ([Country], String)  -- Output: Next state and output
 viewNinjasByCountry state countryCode
-    | not (isCountryValid countryCode) = (state, invalidCountryInput)
-    | otherwise                        = (state, output ++ warning)
+    | not (isCountryValid countryCode) = (state, invalidCountryInput)   -- If given country code is not valid print error message
+    | otherwise                        = (state, output ++ warning)     
     where output = displayNinjas (sortNinjas (getAvailableNinjasByCountry state (toChar countryCode)))
           warning = displayCountryWarning state (toChar countryCode)
 
-
-viewNinjas :: [Country] -> ([Country], String)
+-- | Show sorted ninjas
+viewNinjas :: [Country]                 -- Input1: Current state of the program. Contains all country
+              -> ([Country], String)    -- Output: Next state and output
 viewNinjas state = (state, displayNinjas (sortNinjas (getAvailableNinjas state)))
     
-
-viewRoundNinjas :: [Country] -> String -> String -> String -> String -> ([Country], String)
+-- | This function handles round between ninjas action. 
+viewRoundNinjas :: [Country]                -- Input1: Current state of the program. Contains all country
+                    -> String               -- Input2: Name of first ninja
+                    -> String               -- Input3: Country code of second ninja
+                    -> String               -- Input4: Name of second ninja
+                    -> String               -- Input5: Country code of second ninja
+                    -> ([Country], String)  -- Output: Next state and output
 viewRoundNinjas state nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja
+    -- Validation of inputs
     | not (isCountryValid countryOfFirstNinja)  = (state, "Country of first ninja does not exist.\n")
     | not (isCountryValid countryOfSecondNinja) = (state, "Country of second ninja does not exist.\n")
     | length ninjasOfFirstCountry == 0          = (state, "First ninja that you entered not found for given country.\n")
@@ -317,8 +346,13 @@ viewRoundNinjas state nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja cou
     where ninjasOfFirstCountry = findNinjaByNameAndCountry state nameOfFirstNinja (toChar countryOfFirstNinja)
           ninjasOfSecondCountry = findNinjaByNameAndCountry state nameOfSecondNinja (toChar countryOfSecondNinja)
 
-viewRoundCountries :: [Country] -> String -> String -> ([Country], String)
+-- | This function handles round between countries action. 
+viewRoundCountries :: [Country]                 -- Input1: Current state of the program. Contains all country
+                       -> String                -- Input2: First country code
+                       -> String                -- Input3: Second country code
+                       -> ([Country], String)   -- Output: Next state and output
 viewRoundCountries state firstCountryCode secondCountryCode
+    -- Validation of inputs
     | not (isCountryValid firstCountryCode)  = (state, "First country code does not exist.\n")
     | not (isCountryValid secondCountryCode) = (state, "Second country code does not exist.\n")
     | length ninjasOne == 0                  = (state, "There are no ninjas left to fight for first country.\n")
@@ -331,7 +365,13 @@ viewRoundCountries state firstCountryCode secondCountryCode
           warningForFirstCountry = displayCountryWarning state (toChar firstCountryCode)
           warningForSecondCountry = displayCountryWarning state (toChar secondCountryCode)
 
-convertStringListToNinja :: [String] -> Ninja
+{-
+    File and Initial Read functions.
+    These functions are used to construct initial state.
+-}
+-- | Converts string list to ninja object.
+convertStringListToNinja :: [String]  -- Input1: String List
+                            -> Ninja  -- Output: Ninja object
 convertStringListToNinja stringList = Ninja {
         name = stringList!!0,
         country = toLower ((take 1 (stringList!!1))!!0),
@@ -351,7 +391,9 @@ convertStringListToNinja stringList = Ninja {
             abilityOneScore = getAbilityImpact ability1
             abilityTwoScore = getAbilityImpact ability2
 
-constructInitialState :: [Ninja] -> [Country]
+-- | Construct initial state from all ninjas
+constructInitialState :: [Ninja]        -- Input1: All ninjas in the file
+                          -> [Country]  -- Output: Initial state of the program
 constructInitialState allNinjas = initialState
     where fire         = Country{countryName = "fire", ninjas = returnNinjasByCountry 'f' allNinjas, code = 'f', promoted = False}
           lightning    = Country{countryName = "lightning", ninjas=returnNinjasByCountry 'l' allNinjas, code='l', promoted = False}
@@ -360,18 +402,7 @@ constructInitialState allNinjas = initialState
           water        = Country{countryName = "water", ninjas=returnNinjasByCountry 'w' allNinjas,  code='w', promoted = False}
           initialState = [fire, lightning, water, wind, earth]
 
-
--- TODO: refactor here, probably duplicated or can be simplified
-returnNinjasByCountry :: Char -> [Ninja] -> [Ninja]
-returnNinjasByCountry c ninjaList = filter (\x -> country x == c) ninjaList
-
-data Input = ViewNinjas
-  | ViewNinjasByCountry String
-  | RoundNinja String String String String
-  | RoundCountry String String
-  | Exit
-  | Invalid
-
+-- | Read user input. This function reads user input and returns Input object
 readInput :: IO Input
 readInput = do
     action <- inputWithText "Enter the action: "
@@ -393,13 +424,17 @@ readInput = do
         "e" -> return Exit
         _ -> return Invalid
 
-
-processUserInput :: [Country] -> Input -> ([Country], String)
+-- | Process and fetch user input by pattern matchin
+processUserInput :: [Country]               -- Input1: Current state
+                    -> Input                -- Input2: User input as Input data type
+                    -> ([Country], String)  -- Output: Next state and output of the program
 processUserInput state (ViewNinjasByCountry countryCode) = viewNinjasByCountry state countryCode
 processUserInput state (ViewNinjas) = viewNinjas state
 processUserInput state (RoundNinja a b c d) = viewRoundNinjas state a b c d
 processUserInput state (RoundCountry firstCountryCode secondCountryCode) = viewRoundCountries state firstCountryCode secondCountryCode
 
+-- | Main loop for user actions. This function creates loop and shows available actions and outputs.
+-- | It takes current state and recursively calls by geneerated state.
 mainLoop :: [Country] -> IO()
 mainLoop currentState = do
     displayOptions
@@ -417,6 +452,7 @@ mainLoop currentState = do
             putStrLn output
             mainLoop nextState
 
+-- | Construct initial state and start the program
 main = do  
     -- Read from file and init variables
     content <- readFile "csereport.txt"
