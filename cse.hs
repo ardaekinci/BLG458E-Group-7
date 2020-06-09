@@ -1,6 +1,6 @@
-import Data.Char -- Used for toLower
-import System.IO -- Flush buffer befor taking input from user
-import System.Environment -- Commandline arguments
+import Data.Char (toLower)          -- Used for toLower
+import System.IO (hFlush, stdout)   -- Flush buffer befor taking input from user
+import System.Environment (getArgs) -- Commandline arguments
 
 {-
     Constants
