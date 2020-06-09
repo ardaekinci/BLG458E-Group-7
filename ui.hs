@@ -194,6 +194,23 @@ updateWinnerNinja state winner = (updatedState, updatedWinner)
           updatedCountry = Country{countryName=countryName fromCountry, ninjas=includingWinner, code=code fromCountry, promoted=updatedPromotedStatus}
           updatedState = take countryIndex state ++ [updatedCountry] ++ takeEnd (4 - countryIndex) state
 
+-- | Manage round results between ninjas. Update winner, remove loser.
+arrangeRoundResults :: [Country]                -- Input1: Current state of the program. Contains all country
+                        -> (Ninja, Ninja)       -- Input2: (Winner, Loser) ninjas
+                        -> ([Country], String)  -- Output: Next state of program and winner message
+arrangeRoundResults state (winner, loser) = (updatedState, showWinner updatedNinja)
+    where (updatedState, updatedNinja) = updateWinnerNinja (removeNinjaFromCountry state loser) winner
+
+-- | Make a round between ninjas. Select winner and loser.
+roundBetweenNinjas :: [Country]                 -- Input1: Current state of the program. Contains all country
+                       -> (Ninja, Ninja)        -- Input2: Ninjas that are fighting
+                       -> ([Country], String)   -- Output: Next state of program and output message
+roundBetweenNinjas state (ninja1, ninja2) 
+    | ninja1 > ninja2   = arrangeRoundResults state (ninja1, ninja2)
+    | ninja1 < ninja2   = arrangeRoundResults state (ninja2, ninja1)
+    | otherwise         = arrangeRoundResults state (winner, loser)
+    where (winner, loser) = selectRandomWinner (ninja1, ninja2)
+
 {-
     Ninjas Ranking Functions
     These functions are used to rank ninjas according to CSE rules.
@@ -225,10 +242,19 @@ sortNinjas (x:xs) = sortNinjas smaller ++ [x] ++ sortNinjas larger
     smaller = [a | a <- xs, smallerOrEqualNinja a x]
     larger  = [a | a <- xs, biggerNinja a x]
 
-getTotalAbilityScore :: String -> String -> Int
+{-
+    Util function for ninjas.
+    These functions are used for calculation, validation etc. for ninjas.
+-}
+-- | Get total ability score of ninja (Sum of two abilities)
+getTotalAbilityScore :: String      -- Input1: First ability name
+                        -> String   -- Input2: Second ability name
+                        -> Int      -- Output: Sum of impacts of abilites
 getTotalAbilityScore a1 a2 = (getAbilityImpact a1) + (getAbilityImpact a2)
 
-getAbilityImpact :: String -> Int
+-- | Get ability impact of ability by name
+getAbilityImpact :: String -- Input1: Ability name
+                    -> Int -- Output: Ability impact
 getAbilityImpact "Clone" = 20
 getAbilityImpact "Hit" = 10
 getAbilityImpact "Lightning" = 50
@@ -241,12 +267,33 @@ getAbilityImpact "Summon" = 50
 getAbilityImpact "Storm" = 10
 getAbilityImpact "Rock" = 20
 
--- Pattern Matching
+-- | This function selects a random winner if scores are equal
+selectRandomWinner :: (Ninja, Ninja)    -- Input1: Ninja tuples
+                      -> (Ninja, Ninja) -- Output: Return ninjas (Winner, Loser)
+selectRandomWinner (first, second) 
+    | randInt == 0  = (first, second)
+    | otherwise     = (second, first)
+    where randInt = 0
+
+{-
+    Util function for countries.
+    These functions are used for countries objects.
+-}
+
 -- | The 'isCountryValid' function checks the user input for validation.
--- param1 is String and user input.
-isCountryValid :: String -> Bool 
+isCountryValid :: String  -- Input1: Country Code
+                  -> Bool -- Output: Validation result
 isCountryValid [country] = elem country availableCountries -- Matches on exactly one item for a country with this pattern 
 isCountryValid _ = False -- Return False for other inputs
+
+-- | Get country index for state by country code
+getCountryIndex :: Char     -- Input1: Country code
+                   -> Int   -- Output: Country index in the current state
+getCountryIndex 'f' = fireIndex
+getCountryIndex 'l' = lightningIndex
+getCountryIndex 'w' = waterIndex
+getCountryIndex 'n' = windIndex
+getCountryIndex 'e' = earthIndex
 
 viewNinjasByCountry :: [Country] -> String -> ([Country], String) 
 viewNinjasByCountry state countryCode
@@ -258,36 +305,7 @@ viewNinjasByCountry state countryCode
 
 viewNinjas :: [Country] -> ([Country], String)
 viewNinjas state = (state, displayNinjas (sortNinjas (getAvailableNinjas state)))
-
-
-getCountryIndex :: Char -> Int
-getCountryIndex x
-    | (x == 'f') = 0
-    | (x == 'l') = 1
-    | (x == 'w') = 2
-    | (x == 'n') = 3
-    | (x == 'e') = 4
-
-
     
-
-arrangeRoundResults :: [Country] -> (Ninja, Ninja) -> ([Country], String)
-arrangeRoundResults state (winner, loser) = (updatedState, showWinner updatedNinja)
-    where (updatedState, updatedNinja) = updateWinnerNinja (removeNinjaFromCountry state loser) winner
-
-selectRandomWinner :: (Ninja, Ninja) -> (Ninja, Ninja)
-selectRandomWinner (first, second) 
-    | randInt == 0  = (first, second)
-    | otherwise     = (second, first)
-    where randInt = 0
-
-roundBetweenNinjas :: [Country] -> (Ninja, Ninja) -> ([Country], String)
-roundBetweenNinjas state (ninja1, ninja2) 
-    | ninja1 > ninja2   = arrangeRoundResults state (ninja1, ninja2)
-    | ninja1 < ninja2   = arrangeRoundResults state (ninja2, ninja1)
-    | otherwise         = arrangeRoundResults state (winner, loser)
-    where (winner, loser) = selectRandomWinner (ninja1, ninja2)
-
 
 viewRoundNinjas :: [Country] -> String -> String -> String -> String -> ([Country], String)
 viewRoundNinjas state nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja
