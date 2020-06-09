@@ -24,6 +24,18 @@ lightningIndex = 1
 waterIndex = 2
 windIndex = 3
 earthIndex = 4
+-- Impacts of Abilities
+CLONE = 20
+HIT = 10
+LIGHTNING = 50
+VISION = 30
+SAND = 50
+FIRE = 40
+WATER = 30
+BLADE = 20
+SUMMON = 50
+STORM = 10
+ROCK = 20
 
 {-
     Utils
@@ -270,17 +282,17 @@ getTotalAbilityScore a1 a2 = (getAbilityImpact a1) + (getAbilityImpact a2)
 -- | Get ability impact of ability by name
 getAbilityImpact :: String -- Input1: Ability name
                     -> Int -- Output: Ability impact
-getAbilityImpact "Clone" = 20
-getAbilityImpact "Hit" = 10
-getAbilityImpact "Lightning" = 50
-getAbilityImpact "Vision" = 30
-getAbilityImpact "Sand" = 50
-getAbilityImpact "Fire" = 40
-getAbilityImpact "Water" = 30
-getAbilityImpact "Blade" = 20
-getAbilityImpact "Summon" = 50
-getAbilityImpact "Storm" = 10
-getAbilityImpact "Rock" = 20
+getAbilityImpact "Clone" = CLONE
+getAbilityImpact "Hit" = HIT
+getAbilityImpact "Lightning" = LIGHTNING
+getAbilityImpact "Vision" = VISION
+getAbilityImpact "Sand" = SAND
+getAbilityImpact "Fire" = FIRE
+getAbilityImpact "Water" = WATER
+getAbilityImpact "Blade" = BLADE
+getAbilityImpact "Summon" = SUMMON
+getAbilityImpact "Storm" = STORM
+getAbilityImpact "Rock" = ROCK
 
 -- | This function selects a random winner if scores are equal
 selectRandomWinner :: (Ninja, Ninja)    -- Input1: Ninja tuples
