@@ -1,5 +1,6 @@
 import Data.Char -- Used for toLower
 import System.IO -- Flush buffer befor taking input from user
+import System.Environment -- Commandline arguments
 
 {-
     Constants
@@ -58,6 +59,12 @@ toChar _     = error "Wrong Input Supplied. Input Length must be exactly 1"
 -- Get the last n element from the lıst
 takeEnd :: Int -> [a] -> [a]
 takeEnd n = reverse . take n . reverse 
+
+-- Get file name from command line arguments
+getFileNameFromArgs ::  [String]    -- Input1: CLI Args
+                        -> String   -- Output: File name
+getFileNameFromArgs [fileName] = fileName
+getFileNameFromArgs _           = error "Invalid args supplied."
 
 {-
     Data Types
@@ -471,8 +478,11 @@ mainLoop currentState = do
 
 -- | Construct initial state and start the program
 main = do  
+    -- Get command line arguments
+    args <- getArgs
+    let fileName = getFileNameFromArgs args
     -- Read from file and init variables
-    content <- readFile "csereport.txt"
+    content <- readFile fileName
     -- split content by newlines and whitespaces, convert it to ninjas data
     let allNinjas = map convertStringListToNinja (map words (lines content))
     -- construct initial state list from ninja list
