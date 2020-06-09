@@ -248,7 +248,7 @@ roundBetweenNinjas state (ninja1, ninja2)
     Ninjas Ranking Functions
     These functions are used to rank ninjas according to CSE rules.
 -}
--- | Checks if ninja smaller or equal to other ninja according to CSE rules.
+-- | Checks if the first ninja smaller or equal to other ninja according to CSE rules.
 smallerOrEqualNinja :: Ninja    -- Input1: First ninja
                        -> Ninja -- Input2: Second ninja
                        -> Bool  -- Output: Comparison result of ninjas
@@ -257,7 +257,7 @@ smallerOrEqualNinja n1 n2
     | (r n1) == (r n2) && (score n1) >= (score n2) = True
     | otherwise = False
 
--- | Checks if ninja has high rank against to other ninja.
+-- | Checks if the first ninja has high rank against to other ninja.
 biggerNinja ::  Ninja       -- Input1: First ninja
                 -> Ninja    -- Input2: Second ninja
                 -> Bool     -- Output: Comparison result of ninjas
@@ -266,7 +266,7 @@ biggerNinja n1 n2
     | (r n1) == (r n2) && (score n1) < (score n2) = True
     | otherwise = False
 
--- | Sort ninjas according to ranks.
+-- | Sort ninjas according to rules for listing ninjas (Same number of rounds will be listed in descending order while the number of rounds will be in ascending order). 
 sortNinjas :: [Ninja]       -- Input1: Unsorted ninja list
                -> [Ninja]   -- Output: Sorted ninja list
 sortNinjas []     = []  
@@ -327,6 +327,15 @@ getCountryIndex 'l' = lightningIndex
 getCountryIndex 'w' = waterIndex
 getCountryIndex 'n' = windIndex
 getCountryIndex 'e' = earthIndex
+
+-- | Get country code from the country name
+getCountryCodeByName :: String  -- Input1: Country Name 
+                        -> Char -- Output : Country Code
+getCountryCodeByName "Earth"        = 'e'
+getCountryCodeByName "Lightning"    = 'l'
+getCountryCodeByName "Wind"         = 'n'
+getCountryCodeByName "Water"        = 'w'
+getCountryCodeByName "Fire"         = 'f'
 
 {-
     View Functions.
@@ -398,7 +407,7 @@ convertStringListToNinja :: [String]  -- Input1: String List
                             -> Ninja  -- Output: Ninja object
 convertStringListToNinja stringList = Ninja {
         name = stringList!!0,
-        country = toLower ((take 1 (stringList!!1))!!0),
+        country = getCountryCodeByName (stringList!!1),
         status = "Junior",
         score = 0.5 * exam1 + 0.3 * exam2 + fromIntegral abilityOneScore + fromIntegral abilityTwoScore,
         exam1 = exam1,
