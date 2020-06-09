@@ -248,20 +248,11 @@ roundBetweenNinjas state (ninja1, ninja2)
     Ninjas Ranking Functions
     These functions are used to rank ninjas according to CSE rules.
 -}
--- | Checks if the first ninja smaller or equal to other ninja according to CSE rules.
-smallerOrEqualNinjaComparision :: Ninja    -- Input1: First ninja
-                       -> Ninja -- Input2: Second ninja
-                       -> Bool  -- Output: Comparison result of ninjas
-smallerOrEqualNinjaComparision n1 n2 
-    | (r n1) < (r n2) = True
-    | (r n1) == (r n2) && (score n1) >= (score n2) = True
-    | otherwise = False
-
 -- | Checks if the first ninja has high rank against to other ninja.
-biggerNinjaComparision ::  Ninja       -- Input1: First ninja
-                -> Ninja    -- Input2: Second ninja
-                -> Bool     -- Output: Comparison result of ninjas
-biggerNinjaComparision n1 n2 
+ninjaComparisonByCseRules ::  Ninja       -- Input1: First ninja
+                              -> Ninja    -- Input2: Second ninja
+                              -> Bool     -- Output: Comparison result of ninjas
+ninjaComparisonByCseRules n1 n2 
     | (r n1) > (r n2) = True
     | (r n1) == (r n2) && (score n1) < (score n2) = True
     | otherwise = False
@@ -272,8 +263,8 @@ sortNinjas :: [Ninja]       -- Input1: Unsorted ninja list
 sortNinjas []     = []  
 sortNinjas (x:xs) = sortNinjas smaller ++ [x] ++ sortNinjas larger
   where
-    smaller = [a | a <- xs, smallerOrEqualNinjaComparision a x]
-    larger  = [a | a <- xs, biggerNinjaComparision a x]
+    smaller = [a | a <- xs, not (ninjaComparisonByCseRules a x)]
+    larger  = [a | a <- xs, ninjaComparisonByCseRules a x]
 
 {-
     Util function for ninjas.
