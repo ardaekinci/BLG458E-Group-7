@@ -350,13 +350,18 @@ viewRoundNinjas :: [Country]                -- Input1: Current state of the prog
                     -> ([Country], String)  -- Output: Next state and output
 viewRoundNinjas state nameOfFirstNinja countryOfFirstNinja nameOfSecondNinja countryOfSecondNinja
     -- Validation of inputs
-    | not (isCountryValid countryOfFirstNinja)  = (state, "Country of first ninja does not exist.\n")
-    | not (isCountryValid countryOfSecondNinja) = (state, "Country of second ninja does not exist.\n")
-    | length ninjasOfFirstCountry == 0          = (state, "First ninja that you entered not found for given country.\n")
-    | length ninjasOfSecondCountry == 0         = (state, "Second ninja that you entered not found for given country.\n")
-    | otherwise                                 = roundBetweenNinjas state ((head ninjasOfFirstCountry), (head ninjasOfSecondCountry))
+    | not (isCountryValid countryOfFirstNinja)      = (state, "Country of first ninja does not exist.\n")
+    | not (isCountryValid countryOfSecondNinja)     = (state, "Country of second ninja does not exist.\n")
+    | countryOfFirstNinja == countryOfSecondNinja   = (state, "Countries of ninjas cannot be same.\n")
+    | length ninjasOfFirstCountry == 0              = (state, "First ninja that you entered not found for given country.\n")
+    | length ninjasOfSecondCountry == 0             = (state, "Second ninja that you entered not found for given country.\n")
+    | warningForFirstCountry /= ""                  = (state, warningForFirstCountry)
+    | warningForSecondCountry /= ""                 = (state, warningForSecondCountry)
+    | otherwise                                     = roundBetweenNinjas state ((head ninjasOfFirstCountry), (head ninjasOfSecondCountry))
     where ninjasOfFirstCountry = findNinjaByNameAndCountry state nameOfFirstNinja (toChar countryOfFirstNinja)
           ninjasOfSecondCountry = findNinjaByNameAndCountry state nameOfSecondNinja (toChar countryOfSecondNinja)
+          warningForFirstCountry = displayCountryWarning state (toChar countryOfFirstNinja)
+          warningForSecondCountry = displayCountryWarning state (toChar countryOfSecondNinja)
 
 -- | This function handles round between countries action. 
 viewRoundCountries :: [Country]                 -- Input1: Current state of the program. Contains all country
@@ -367,6 +372,7 @@ viewRoundCountries state firstCountryCode secondCountryCode
     -- Validation of inputs
     | not (isCountryValid firstCountryCode)  = (state, "First country code does not exist.\n")
     | not (isCountryValid secondCountryCode) = (state, "Second country code does not exist.\n")
+    | firstCountryCode == secondCountryCode  = (state, "Countries of ninjas cannot be same.\n")
     | length ninjasOne == 0                  = (state, "There are no ninjas left to fight for first country.\n")
     | length ninjasTwo == 0                  = (state, "There are no ninjas left to fight for second country.\n")
     | warningForFirstCountry /= ""           = (state, warningForFirstCountry)
